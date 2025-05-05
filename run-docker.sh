@@ -6,6 +6,6 @@ docker build -t aws-workshop-env .
 # 컨테이너 실행
 docker run -it \
     --name aws-workshop \
-    -v "$(pwd):/workspace" \
+    -v "$(pwd):/workshop" \
     -v "$HOME/.aws:/root/.aws" \
     aws-workshop-env 

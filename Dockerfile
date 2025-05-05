@@ -2,7 +2,7 @@
 FROM --platform=linux/arm64 python:3.8-slim
 
 # 작업 디렉토리 설정
-WORKDIR /workspace
+WORKDIR /workshop
 
 # 시스템 패키지 설치
 RUN apt-get update && apt-get install -y \
@@ -30,7 +30,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # 볼륨 마운트 포인트 설정
-VOLUME ["/workspace"]
+VOLUME ["/workshop"]
 
 # 기본 명령어 설정
 CMD ["/bin/bash"] 
