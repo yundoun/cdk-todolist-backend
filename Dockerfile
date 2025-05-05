@@ -8,9 +8,10 @@ WORKDIR /workspace
 RUN apt-get update && apt-get install -y \
     curl \
     gnupg \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
-# Node.js 설치 (AWS CDK 사용을 위해)
+# Node.js 설치 (AWS CDK 사용을 위해)d
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - \
     && apt-get install -y nodejs \
     && npm install --location=global aws-cdk
