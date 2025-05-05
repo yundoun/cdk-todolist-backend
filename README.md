@@ -19,7 +19,6 @@ chmod +x run-docker.sh
 - Node.js 18.x
 - AWS CLI v2
 - AWS CDK
-- Docker
 
 ## 프로젝트 구조
 
