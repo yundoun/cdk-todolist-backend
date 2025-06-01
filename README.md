@@ -2,38 +2,50 @@
 
 이 프로젝트는 AWS CDK를 사용하여 현대적인 웹 애플리케이션을 구축하는 실습 프로젝트입니다. AWS의 다양한 서비스를 활용하여 마이크로서비스 아키텍처를 구현하고, 인프라를 코드로 관리하는 방법을 학습합니다.
 
-## 개발 환경 설정
+## 개발 환경 준비
 
-프로젝트는 Docker를 사용하여 개발 환경을 구성합니다:
+해당 프로젝트는 다음 환경들이 설치되어 있어야 합니다.
+꼭 버전이 맞아야 하는건 아니지만 aws-cli는 꼭 2버전입니다.
+
+- [Python 3.13](https://www.python.org/downloads/)
+- [Node.js 20.x](https://nodejs.org/ko)
+- [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+- [AWS CDK](https://docs.aws.amazon.com/ko_kr/cdk/v2/guide/getting-started.html)
+- [Docker & Docker Desktop](https://www.docker.com/)
 
 ```bash
-# 실행 권한 부여
-chmod +x run-docker.sh
+# AWS CLI 버전 확인
+aws --version
+# 출력: aws-cli/2.27.26 Python/3.13.3 Windows/11 exe/AMD64
 
-# 개발 환경 도커 이미지 빌드 및 실행
-./run-docker.sh
+# Node.js 버전 확인
+node -v
+# 출력: v20.18.0
+
+# npm 버전 확인
+npm -v
+# 출력: 10.9.0
+
+# Python 버전 확인
+python --version
+# 출력: Python 3.13.0
+
+# AWS CDK 버전 확인
+cdk --version
+# 출력: 2.1017.1 (build 60506e5)
 ```
-
-개발 환경에는 다음 도구들이 포함되어 있습니다:
-- Python 3.9
-- Node.js 18.x
-- AWS CLI v2
-- AWS CDK
 
 ## 프로젝트 구조
 
 ```
 .
-├── source/                    # AWS 워크샵 소스 코드
+├── source/                    # AWS 워크샵 예제 소스 코드
 │   ├── module-1/             # 모듈 1: 기본 인프라 설정
 │   ├── module-2/             # 모듈 2: Flask 애플리케이션 및 Fargate 배포
 │   └── ...
 ├── cdk/                      # cdk 소스 코드
 ├── web/                      # 웹 소스 코드
 ├── app/                      # 애플리케이션 소스 코드
-├── Dockerfile                # 개발 환경 도커 설정
-├── requirements.txt          # Python 패키지 의존성
-└── run-docker.sh            # 도커 실행 스크립트
 ```
 
 ## 주의사항
@@ -42,6 +54,6 @@ chmod +x run-docker.sh
 - 일부 AWS 서비스는 비용이 발생할 수 있습니다
 - 실습 완료 후 생성된 리소스는 반드시 삭제해야 합니다
 
-## 참고 자료
+## 원본 출처
 
 - [AWS sample](https://github.com/aws-samples/aws-modern-application-workshop)
