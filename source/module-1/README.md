@@ -18,42 +18,6 @@
 
 S3와 CloudFront의 조합은 정적 웹 콘텐츠(html, js, css, 미디어 등)를 인터넷 사이트의 웹 브라우저에 직접 제공할 수 있는 매우 유용한 기능을 제공합니다. S3를 활용하여 콘텐츠를 호스팅하고 빠른 콘텐츠 전송 네트워크(CDN) 서비스인 CloudFront로 우리의 TodoList 웹사이트를 짧은 대기 시간과 빠른 전송 속도로 전 세계 고객에게 안전하게 제공할 것입니다.
 
-## 시작하기
-
-### AWS 콘솔에 로그인
-
-시작하기 위해 워크샵에서 사용할 계정으로 [AWS Console](https://console.aws.amazon.com)에 로그인합니다.
-
-워크샵에서 사용하는 AWS 서비스가 이용 가능한 모든 리전에 배포할 수 있습니다. 아래 리전은 확인된 배포 가능한 리전입니다:
-
-* us-east-1 (N. Virginia)
-* us-east-2 (Ohio)
-* us-west-2 (Oregon)
-* ap-southeast-1 (Singapore)
-* ap-northeast-1 (Tokyo)
-* ap-northeast-2 (Seoul)
-* eu-central-1 (Frankfurt)
-* eu-west-1 (Ireland)
-
-AWS 관리 콘솔의 오른쪽 위에 있는 드롭다운에서 리전을 선택합니다.
-
-### 도커 개발 환경 설정
-
-도커를 생성 후 컨테이너 내부로 이동합니다
-
-```sh
-docker start aws-workshop
-docker attach aws-workshop
-```
-
-워크샵 코드를 클론합니다
-
-```sh
-git clone https://github.com/dev-coo/aws-cdk-ioc-sample.git source
-```
-
-리포지토리 복제가 완료된 후 IDE 왼쪽의 프로젝트 탐색기에서 복제한 파일을 볼 수 있습니다
-
 ## 코드 기반 인프라 (Infrastructure As Code)
 
 다음으로 Amazon S3에 정적 웹사이트의 형태로 호스팅되어 CloudFront 콘텐츠 전송 네트워크(CDN)로 사용자에게 배포 될 웹 애플리케이션 코드를 위한 리포지토리 생성에 필요한 구성 요소를 만들어 보겠습니다. 이를 위해, [AWS CloudFormation](https://aws.amazon.com/cloudformation/)이라는 도구를 사용하여 우리의 코드 기반 인프라 (Infrastructure as Code)를 생성해보겠습니다.
@@ -75,26 +39,14 @@ CDK가 지원하는 프로그래밍 언어(C#/.NET, Java, JavaScript, Python, Ty
 
 AWS CDK의 가장 큰 이점 중 하나는 재사용성의 원칙입니다. 애플리케이션과 팀 전체에서 구성 요소를 작성, 재사용, 그리고 공유할 수 있다는 것입니다. 이러한 구성 요소를 AWS CDK 내에서 컨스트럭츠(Constructs)라고 합니다. 모듈 1에서 작성할 코드는 나머지 모듈에서 재사용됩니다.
 
-#### AWS CDK 설치
+### CDK App 폴더 초기화
 
-다음 명령을 실행하여 CDK의 버전을 확인합니다:
-
-```sh
-cdk --version
-```
-
-만약 AWS CDK가 설치되어있지 않다면 다음 명령으로 로컬 환경에 AWS CDK를 설치합니다:
-
-```sh
-npm install --location=global aws-cdk
-```
-
-#### CDK App 폴더 초기화
+> 아래 모든 이동 커맨드는 cli가 연결될 수 있도록 작성되어 있습니다. 순서 외 폴더이동을 하였다면 다시 초기화 해주세요.
 
 `workshop` 폴더에서 AWS CDK 애플리케이션을 포함할 새로운 폴더를 생성합니다:
 
 ```sh
-mkdir /workshop/cdk && cd /workshop/cdk/
+mkdir cdk && cd cdk
 ```
 
 `cdk` 폴더에서 CDK 앱을 초기화합니다. 이 앱은 현재 지원하는 다음의 프로그래밍 언어 중 선택할 수 있습니다: csharp (C#), fsharp(F#), go (Go), java (Java), javascript (JavaScript), python (Python), typescript (TypeScript). TEMPLATE은 선택한 언어로 앱을 초기화할 때 생성되는 기본 앱과는 다른 앱을 생성할 때 사용할 수 있는 선택적인 템플릿입니다.
@@ -123,7 +75,6 @@ cdk init app --language typescript
 `lib` 폴더 안에 `web-application-stack.ts` 이름의 새 파일을 생성한 후, 그리고 다음 코드를 복사하거나 똑같이 작성하여 스켈레톤 클래스 구조를 정의합니다:
 
 ```sh
-cd /workshop/cdk
 touch lib/web-application-stack.ts
 ```
 
@@ -158,7 +109,7 @@ new WebApplicationStack(app, "TodoList-Website");
 `workshop` 루트 디렉토리에서 웹 애플리케이션 코드를 저장할 새로운 디렉토리를 생성합니다:
 
 ```sh
-cd /workshop
+cd ../
 mkdir web
 ```
 
@@ -168,9 +119,9 @@ mkdir web
 cp -r source/module-1/web/* ./web
 ```
 
-### 웹사이트 루트 디렉토리 정의
+### 루트 디렉토리 정의
 
-webAppRoot 변수가 `/workshop/web` 디렉토리를 가르키는지 확인합니다. `web-application-stack.ts`에서 `path` 모듈을 import 합니다. 이 `path` 모듈로 웹사이트 폴더의 경로를 확인할 수 있습니다:
+webAppRoot 변수가 `web` 디렉토리를 가르키는지 확인합니다. `web-application-stack.ts`에서 `path` 모듈을 import 합니다. 이 `path` 모듈로 웹사이트 폴더의 경로를 확인할 수 있습니다:
 
 ```typescript
 import path = require('path');
@@ -273,20 +224,32 @@ new cdk.CfnOutput(this, "CloudFrontURL", {
 });
 ```
 
-이것으로 모듈 1 스택의 구성 요소 작성을 완료했습니다. `cdk`폴더는 레퍼런스로 구현된 `workshop/source/module-1/cdk` 디렉토리와 유사한 구성이어야 하니 참고 바랍니다.
+이것으로 모듈 1 스택의 구성 요소 작성을 완료했습니다. `cdk`폴더는 레퍼런스로 구현된 `source/module-1/cdk` 디렉토리와 유사한 구성이어야 하니 참고 바랍니다.
 
 ### 합성된 CloudFormation 템플릿 보기
 
-`workshop/cdk/` 폴더에서 `cdk synth TodoList-Website`를 실행하여 지금까지 작성한 코드 기반의 CloudFormation 템플릿을 출력합니다.
+`cdk/` 폴더에서 `cdk synth TodoList-Website`를 실행하여 지금까지 작성한 코드 기반의 CloudFormation 템플릿을 출력합니다.
 
 ```sh
-cd /workshop/cdk
-cdk synth TodoList-Website > synth.txt
+cd cdk
+cdk synth TodoList-Website > synth.yaml
 ```
 
 ### 웹사이트와 인프라 배포
 
 콘텐츠를 S3 환경에 배포하는 AWS CDK 앱을 처음 배포할 때는 "bootstrap stack"을 설치해야 합니다. 이 기능은 CDK 툴킷 작동에 필요한 리소스를 생성합니다. 현재의 bootstrap 명령은 Amazon S3 버킷만 생성합니다:
+
+**"cdk bootstrap" 명령어는 계정 + 리전 조합당 한 번입니다.**
+먼저 cdk를 사용한적이 있는지 확인하기 위해 다음 명령어를 쳐봅니다
+
+```sh
+# 현재 계정/리전에 bootstrap 되어있는지 확인
+aws cloudformation describe-stacks --stack-name CDKToolkit
+```
+
+TODO: 존재하지 않을 때 어떻게 뜨는지 확인해보기
+만약 존재한다면 아래 bootstrap을 하지 않아도 됩니다. (재실행해도 문제되지는 않음)
+
 
 > **참고:** AWS CDK로 인해 버킷에 저장되는 객체들과 관련한 비용이 청구됩니다. 그 이유는 AWS CDK가 버킷에서 어떠한 객체도 삭제하지 않기 때문이며 AWS CDK를 사용할 때 생성되는 파일들은 지속적으로 누적되어 저장됩니다. 계정 내에서 TodoList-Website 스택을 제거함으로써 버킷을 제거할 수 있습니다.
 
@@ -328,8 +291,16 @@ cdk deploy TodoList-Website
 웹사이트의 내용을 수정한 후 변경사항을 배포하려면 다음 명령어를 실행합니다:
 
 ```sh
-cd /workshop/cdk
 cdk deploy TodoList-Website
+```
+
+### 리소스 정리
+
+모든 예제는 리소스 정리가 중요합니다.
+다음 예제로 넘어가지 않으실 경우에는 리소스 정리를 꼭 해주세요.
+
+```sh
+cdk destroy TodoList-Website
 ```
 
 이것으로 모듈 1을 마치겠습니다.
