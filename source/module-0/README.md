@@ -28,4 +28,4 @@ Default output format [None]: json
 
 이것으로 모듈 0을 마치겠습니다.
 
-[모듈 1 진행](/module-1)
+[모듈 1 진행](../module-1/README.md)

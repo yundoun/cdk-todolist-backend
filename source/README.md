@@ -63,7 +63,7 @@ TodoList 워크샵에서 생성 및 사용한 모든 리소스의 제거를 아�
 * [Amazon CloudFront](https://console.aws.amazon.com/cloudfront/home)
 
 
-[모듈 0 진행](/module-0)
+[모듈 0 진행](./module-0/README.md)
 
 
 ## [AWS Developer Center](https://developer.aws)
