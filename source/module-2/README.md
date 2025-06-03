@@ -39,10 +39,10 @@
 * [**Security Group**](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html) - 도커 컨테이너가 Network Load Balancer를 통해 인터넷으로부터 8080 포트로 트래픽을 수신할 수 있도록 합니다.
 * [**IAM 역할**](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html) - 인증 및 접근 관리 역할이 생성됩니다. 이 역할은 워크샵 전체에서 DynamoDB, S3 등과 같은 다른 AWS 서비스 접근에 사용됩니다.
 
-`workshop/cdk` 디렉토리의 `lib` 폴더에서 `network-stack.ts` 이름의 새 파일을 생성합니다:
+`cdk` 디렉토리의 `lib` 폴더에서 `network-stack.ts` 이름의 새 파일을 생성합니다:
 
 ```sh
-cd /workshop/cdk
+cd cdk
 touch lib/network-stack.ts
 ```
 
@@ -123,7 +123,7 @@ this.vpc = new ec2.Vpc(this, "VPC", {
 
 구축하려는 최대 NAT 게이트웨이 수와 배포하려는 최대 가용 영역의 수를 정의했습니다.
 
-> **참고:** 위의 변경을 한 후 `network-stack.ts` 파일과 `workshop/source/module-2/cdk/lib` 폴더에 있는 파일을 비교하고, 동일한지 확인 하시기 바랍니다.
+> **참고:** 위의 변경을 한 후 `network-stack.ts` 파일과 `source/module-2/cdk/lib` 폴더에 있는 파일을 비교하고, 동일한지 확인 하시기 바랍니다.
 
 이제 다음 명령을 사용하여 VPC를 배포합니다:
 
@@ -144,26 +144,29 @@ cdk deploy TodoList-Network
 도커가 로컬 환경에 설치되어 있다면, 도커 이미지를 로컬에서 빌드하기 위해 터미널에 다음 명령을 실행하면 됩니다:
 
 ```sh
-cd /workshop
+cd ../
 mkdir app && cd app
 ```
 
 애플리케이션 코드를 복사합니다:
 
 ```sh
-cp -R /workshop/source/module-2/app /workshop
+cp -R ../source/module-2/app/* .
 ```
 
 준비되어있는 Dockerfile로 Docker 이미지를 생성합니다:
+먼저 설치한 docker desktop을 실행해주세요
 
-* `/workshop/app`으로 이동합니다.
+* `app`으로 이동합니다.
 
 ```
-cd /workshop/app
+cd app
 ```
 
 ```sh
-docker build . -t $(aws sts get-caller-identity --query Account --output text).dkr.ecr.$(aws configure get region).amazonaws.com/todolist/service:latest
+docker buildx build --platform linux/amd64 \
+  -t $(aws sts get-caller-identity --query Account --output text).dkr.ecr.$(aws configure get region).amazonaws.com/todolist/service:latest \
+  --load .
 ```
 
 도커가 애플리케이션이 필요로하는 모든 필수 종속성 패키지를 다운로드하여 설치하고 빌드 된 이미지의 태그를 출력합니다. **나중에 참조할 수 있도록 태그를 복사합니다. 밑의 예제에서의 태그는 다음과 같습니다: 111111111111.dkr.ecr.us-east-1.amazonaws.com/todolist/service:latest**
@@ -177,14 +180,14 @@ Successfully tagged 111111111111.dkr.ecr.us-east-1.amazonaws.com/todolist/servic
 
 로컬 환경에서 이미지를 테스트하여 예상대로 작동하는지 테스트해보겠습니다. 아래 명령을 실행하여 컨테이너를 로컬에 배포합니다:
 
-```
+```sh
 docker run -p 8080:8080 $(aws sts get-caller-identity --query Account --output text).dkr.ecr.$(aws configure get region).amazonaws.com/todolist/service:latest
 ```
 
 컨테이너가 로컬에서 작동중인걸 확인할 수 있습니다:
 
 ```
- * Running on http://0.0.0.0:8080/ (Press CTRL+C to quit)
+ * Running on http://localhost:8080/ (Press CTRL+C to quit)
 ```
 
 로컬에서 서비스를 테스트해보기 위해 웹 브라우저를 열고 다음 URL에 접속합니다:
@@ -199,7 +202,7 @@ http://localhost:8080/todos
 서비스를 로컬에서 성공적으로 테스트하였다면 [Amazon Elastic Container Registry](https://aws.amazon.com/ecr/) (Amazon ECR)에 컨테이너 이미지 리포지토리를 생성하고 이미지를 푸시할 준비가 되었습니다. CDK를 사용하여 레지스트리를 만들기 위해 `lib` 폴더에 `ecr-stack.ts` 이라는 새 파일을 생성합니다:
 
 ```sh
-cd /workshop/cdk
+cd ../cdk/
 touch lib/ecr-stack.ts
 ```
 
@@ -275,13 +278,13 @@ aws ecr get-login-password | docker login --username AWS --password-stdin $(aws 
 
 그런 다음, 위에서 복사한 태그를 사용하여 ECR 리포지토리에 이미지를 푸시합니다. 아래 명령을 사용하면 도커는 생성한 이미지와 함께 연관된 모든 이미지를 Amazon ECR에 푸시할 것 입니다:
 
-```
+```sh
 docker push $(aws sts get-caller-identity --query Account --output text).dkr.ecr.$(aws configure get region).amazonaws.com/todolist/service:latest
 ```
 
 ECR 리포지토리에 저장된 직접 푸시한 이미지를 보기 위해 아래 명령을 실행합니다:
 
-```
+```sh
 aws ecr describe-images --repository-name todolist/service
 ```
 
@@ -353,13 +356,16 @@ export class EcsStack extends cdk.Stack {
 
   constructor(scope: cdk.App, id: string, props: EcsStackProps) {
     super(scope, id);
+
+  }
+}
 ```
 
 ECS Cluster 객체를 정의합니다:
 
 ```typescript
 this.ecsCluster = new ecs.Cluster(this, "Cluster", {
-  clusterName: "MythicalMysfits-Cluster",
+  clusterName: "TodoList-Cluster",
   vpc: props.vpc
 });
 this.ecsCluster.connections.allowFromAnyIpv4(ec2.Port.tcp(8080));
@@ -369,13 +375,21 @@ this.ecsCluster.connections.allowFromAnyIpv4(ec2.Port.tcp(8080));
 
 ```typescript
 this.ecsService = new ecsPatterns.NetworkLoadBalancedFargateService(this, "Service", {
-  cluster: this.ecsCluster,
-  desiredCount: 1,
-  publicLoadBalancer: true,
+  // ECS 클러스터 지정 - 컨테이너들이 실행될 논리적 그룹
+  cluster: this.ecsCluster,  
+  // 실행할 태스크(컨테이너) 개수 - 1개면 단일 인스턴스, 2개 이상이면 고가용성
+  desiredCount: 1,  
+  // 로드밸런서를 인터넷에 노출할지 여부 - true면 외부에서 접근 가능
+  publicLoadBalancer: true,  
+  // 컨테이너 실행 관련 상세 설정
   taskImageOptions: {
+    // CloudWatch 로그 활성화 - 컨테이너 로그를 AWS에서 확인 가능
     enableLogging: true,
-    containerName: "MythicalMysfits-Service",
+    // 컨테이너 이름 - ECS 콘솔에서 보이는 이름
+    containerName: "TodoList-Service",
+    // 컨테이너가 리스닝하는 포트 - Flask 앱이 8080 포트 사용
     containerPort: 8080,
+    // 사용할 Docker 이미지 - ECR 리포지토리에서 latest 태그 자동 선택
     image: ecs.ContainerImage.fromEcrRepository(props.ecrRepository),
   }
 });
@@ -389,50 +403,52 @@ this.ecsService.service.connections.allowFrom(ec2.Peer.ipv4(props.vpc.vpcCidrBlo
 ```typescript
 const taskDefinitionPolicy = new iam.PolicyStatement();
 taskDefinitionPolicy.addActions(
-  // Rules which allow ECS to attach network interfaces to instances
-  // on your behalf in order for awsvpc networking mode to work right
-  "ec2:AttachNetworkInterface",
-  "ec2:CreateNetworkInterface",
-  "ec2:CreateNetworkInterfacePermission",
-  "ec2:DeleteNetworkInterface",
-  "ec2:DeleteNetworkInterfacePermission",
-  "ec2:Describe*",
-  "ec2:DetachNetworkInterface",
+  // ECS가 awsvpc 네트워킹 모드를 위해 네트워크 인터페이스를 관리할 수 있도록 하는 권한
+  "ec2:AttachNetworkInterface",        // 네트워크 인터페이스 연결
+  "ec2:CreateNetworkInterface",        // 네트워크 인터페이스 생성
+  "ec2:CreateNetworkInterfacePermission", // 네트워크 인터페이스 권한 생성
+  "ec2:DeleteNetworkInterface",        // 네트워크 인터페이스 삭제
+  "ec2:DeleteNetworkInterfacePermission", // 네트워크 인터페이스 권한 삭제
+  "ec2:Describe*",                     // EC2 리소스 정보 조회
+  "ec2:DetachNetworkInterface",        // 네트워크 인터페이스 분리
 
-  // Rules which allow ECS to update load balancers on your behalf
-  //  with the information sabout how to send traffic to your containers
-  "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
-  "elasticloadbalancing:DeregisterTargets",
-  "elasticloadbalancing:Describe*",
-  "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
-  "elasticloadbalancing:RegisterTargets",
+  // ECS가 로드밸런서를 관리하고 트래픽을 컨테이너로 라우팅하기 위한 권한
+  "elasticloadbalancing:DeregisterInstancesFromLoadBalancer", // 로드밸런서에서 인스턴스 해제
+  "elasticloadbalancing:DeregisterTargets",                   // 타겟 그룹에서 타겟 해제
+  "elasticloadbalancing:Describe*",                           // 로드밸런서 정보 조회
+  "elasticloadbalancing:RegisterInstancesWithLoadBalancer",   // 로드밸런서에 인스턴스 등록
+  "elasticloadbalancing:RegisterTargets",                     // 타겟 그룹에 타겟 등록
 
-  //  Rules which allow ECS to run tasks that have IAM roles assigned to them.
+  // ECS가 IAM 역할이 할당된 태스크를 실행할 수 있도록 하는 권한
   "iam:PassRole",
 
-  //  Rules that let ECS create and push logs to CloudWatch.
-  "logs:DescribeLogStreams",
-  "logs:CreateLogGroup");
+  // ECS가 CloudWatch에 로그를 생성하고 전송할 수 있도록 하는 권한
+  "logs:DescribeLogStreams",           // 로그 스트림 정보 조회
+  "logs:CreateLogGroup"                // 로그 그룹 생성
+);
 taskDefinitionPolicy.addAllResources();
 
+// 실행 역할(Execution Role)에 정책 추가 - ECS 서비스가 컨테이너를 시작하기 위한 권한
 this.ecsService.service.taskDefinition.addToExecutionRolePolicy(
   taskDefinitionPolicy
 );
 
-const taskRolePolicy =  new iam.PolicyStatement();
+const taskRolePolicy = new iam.PolicyStatement();
 taskRolePolicy.addActions(
-  // Allow the ECS Tasks to download images from ECR
-  "ecr:GetAuthorizationToken",
-  "ecr:BatchCheckLayerAvailability",
-  "ecr:GetDownloadUrlForLayer",
-  "ecr:BatchGetImage",
-  // Allow the ECS tasks to upload logs to CloudWatch
-  "logs:CreateLogStream",
-  "logs:CreateLogGroup",
-  "logs:PutLogEvents"
+  // ECS 태스크가 ECR에서 Docker 이미지를 다운로드할 수 있도록 하는 권한
+  "ecr:GetAuthorizationToken",         // ECR 인증 토큰 획득
+  "ecr:BatchCheckLayerAvailability",   // 이미지 레이어 가용성 확인
+  "ecr:GetDownloadUrlForLayer",        // 이미지 레이어 다운로드 URL 획득
+  "ecr:BatchGetImage",                 // 이미지 매니페스트 정보 획득
+  
+  // ECS 태스크가 CloudWatch에 로그를 업로드할 수 있도록 하는 권한
+  "logs:CreateLogStream",              // 로그 스트림 생성
+  "logs:CreateLogGroup",               // 로그 그룹 생성
+  "logs:PutLogEvents"                  // 로그 이벤트 전송
 );
 taskRolePolicy.addAllResources();
 
+// 태스크 역할(Task Role)에 정책 추가 - 컨테이너 내부에서 AWS 서비스에 접근하기 위한 권한
 this.ecsService.service.taskDefinition.addToTaskRolePolicy(
   taskRolePolicy
 );
@@ -469,6 +485,8 @@ const ecsStack = new EcsStack(app, "TodoList-ECS", {
 aws iam create-service-linked-role --aws-service-name ecs.amazonaws.com
 ```
 
+> An error occurred (InvalidInput) when calling the CreateServiceLinkedRole operation: Service role name AWSServiceRoleForECS has been taken in this account, please try a different suffix. 라는 오류는 이미 생성한적이 있다는 뜻입니다.
+
 위의 기존 역할에 대한 오류가 반환되면 이전에 계정에서 역할이 자동으로 생성되었음을 나타내므로 무시해도됩니다.
 
 이제 ECS 스택을 배포합니다:
@@ -483,10 +501,10 @@ cdk deploy TodoList-ECS
 
 #### 서비스 테스트
 
-사용하는 브라우저를 통해 이전 작업 완료 후 출력되는 NLB DNS에 접속하여 작동하는지 확인합니다. CURL 명령을 사용하여 mysfits 리소스에 요청을 보내봅니다:
+사용하는 브라우저를 통해 이전 작업 완료 후 출력되는 NLB DNS에 접속하여 작동하는지 확인합니다. CURL 명령을 사용하여 todos 리소스에 요청을 보내봅니다:
 
 ```sh
-curl http://<replace-with-your-nlb-address>/mysfits
+curl http://<replace-with-your-nlb-address>/todos
 ```
 
 이전에 도커 컨테이너를 로컬에서 테스트할 때 본 JSON 응답과 동일한 응답을 볼 수 있으며, 이를통해 Python 웹 API가 AWS Fargate에서 정상적으로 동작하고 있다는 걸 확인할 수 있습니다.
@@ -495,32 +513,33 @@ curl http://<replace-with-your-nlb-address>/mysfits
 
 > **참고:** Network Load Balancer는 SSL/TLS 인증서가 설치되어 있지 않으므로 HTTP (http://) 요청만 지원합니다. 이 워크샵에서는 http:// 으로만 요청을 보내야 합니다. https:// 요청은 정상적으로 동작하지 않을 것입니다.
 
-### 신비한 미스핏츠가 NLB를 호출하도록 변경
+### 투두리스트가 NLB를 호출하도록 변경
 
 #### API 엔드포인트 수정
 
-다음으로, 웹사이트가 이전에 S3에 업로드한 하드 코딩된 데이터를 사용하는 대신 새로운 API 백엔드와 통합해야 합니다. `workshop/source/module-2/web` 디렉토리에서 웹 애플리케이션 코드를 복사합니다:
+다음으로, 웹사이트가 이전에 S3에 업로드한 하드 코딩된 데이터를 사용하는 대신 새로운 API 백엔드와 통합해야 합니다. `source/module-2/web` 디렉토리에서 웹 애플리케이션 코드를 복사합니다:
 
 ```sh
-cp -r /workshop/source/module-2/web/* /workshop/web
+cp -r ../source/module-2/web/* ../web
 ```
 
-API 호출에 동일한 NLB URL을 사용하기 위해 `workshop/web/index.html` 파일을 업데이트 합니다 (/mysfits 경로를 포함하지 마세요). Cloud9에서 파일을 열고 아래 ' ' 안에 하이라이트된 부분에 NLB URL을 입력합니다:
+API 호출에 동일한 NLB URL을 사용하기 위해 `web/index.html` 파일을 업데이트 합니다 (/todos 경로를 포함하지 마세요). 
 
-![before replace](/images/module-2/before-replace.png)
+```html
+<script>
+  // API 엔드포인트 설정 - NLB 주소로 교체하세요
+  var todosApiEndpoint = 'REPLACE_ME'; // 예시: 'TodoLi-Servi-XXXXXXXXXX-XXXXXXXX.elb.ap-northeast-2.amazonaws.com'
+</script>
+```
 
-복사한 NLB URL을 붙여넣으면 아래와 같이 됩니다:
-
-![after replace](/images/module-2/after-replace.png)
-
-#### 신비한 미스핏츠 웹사이트 업데이트
-S3에서 호스팅되는 웹사이트를 업데이트하기 위해 `MythicalMysfits-Website` 스택을 배포합니다:
+#### 투두리스트 웹사이트 업데이트
+S3에서 호스팅되는 웹사이트를 업데이트하기 위해 `TodoList-Website` 스택을 배포합니다:
 
 ```sh
-cdk deploy MythicalMysfits-Website
+cdk deploy TodoList-Website
 ```
 
-업데이트된 신비한 미스핏츠 웹사이트를 확인하기 위해 모듈 1 마지막에 출력하게끔 한 CloudFront URL을 사용하여 웹사이트에 접속합니다 (HTTP로 접속하여야 합니다). AWS Fargate에 배포된 도커 컨테이너에서 동작하는 Flask API로부터 JSON 데이터를 받습니다.
+업데이트된 투두리스트 웹사이트를 확인하기 위해 모듈 1 마지막에 출력하게끔 한 CloudFront URL을 사용하여 웹사이트에 접속합니다 (**HTTP로 접속하여야 합니다**). AWS Fargate에 배포된 도커 컨테이너에서 동작하는 Flask API로부터 JSON 데이터를 받습니다.
 
 
 ## 모듈 2b: AWS Code 서비스를 사용한 배포 자동화
@@ -536,7 +555,6 @@ cdk deploy MythicalMysfits-Website
 이전처럼 `lib` 폴더에 `cicd-stack.ts` 파일을 생성합니다:
 
 ```sh
-cd /workshop/cdk
 touch lib/cicd-stack.ts
 ```
 
@@ -810,69 +828,54 @@ export class CiCdStack extends cdk.Stack {
     });
     
     const codeBuildPolicy = new iam.PolicyStatement();
-    codeBuildPolicy.addResources(backendRepository.repositoryArn)
     codeBuildPolicy.addActions(
-        "codecommit:ListBranches",
-        "codecommit:ListRepositories",
-        "codecommit:BatchGetRepositories",
-        "codecommit:GitPull"
-      )
-    codebuildProject.addToRolePolicy(
+      // Rules which allow ECS to attach network interfaces to instances
+      // on your behalf in order for awsvpc networking mode to work right
+      "ec2:AttachNetworkInterface",
+      "ec2:CreateNetworkInterface",
+      "ec2:CreateNetworkInterfacePermission",
+      "ec2:DeleteNetworkInterface",
+      "ec2:DeleteNetworkInterfacePermission",
+      "ec2:Describe*",
+      "ec2:DetachNetworkInterface",
+
+      // Rules which allow ECS to update load balancers on your behalf
+      //  with the information sabout how to send traffic to your containers
+      "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+      "elasticloadbalancing:DeregisterTargets",
+      "elasticloadbalancing:Describe*",
+      "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+      "elasticloadbalancing:RegisterTargets",
+
+      //  Rules which allow ECS to run tasks that have IAM roles assigned to them.
+      "iam:PassRole",
+
+      //  Rules that let ECS create and push logs to CloudWatch.
+      "logs:DescribeLogStreams",
+      "logs:CreateLogGroup");
+    codeBuildPolicy.addAllResources();
+
+    this.ecsService.service.taskDefinition.addToExecutionRolePolicy(
       codeBuildPolicy
     );
-    
-    props.ecrRepository.grantPullPush(codebuildProject.grantPrincipal);
 
-    const sourceOutput = new codepipeline.Artifact();
-    const sourceAction = new actions.CodeCommitSourceAction({
-      actionName: "CodeCommit-Source",
-      branch: "master",
-      trigger: actions.CodeCommitTrigger.EVENTS,
-      repository: backendRepository,
-      output: sourceOutput
-    });
-    
-    const buildOutput = new codepipeline.Artifact();
-    const buildAction = new actions.CodeBuildAction({
-      actionName: "Build",
-      input: sourceOutput,
-      outputs: [
-        buildOutput
-      ],
-      project: codebuildProject
-    });
-    
-    const deployAction = new actions.EcsDeployAction({
-      actionName: "DeployAction",
-      service: props.ecsService,
-      input: buildOutput
-    });
-    
-    const pipeline = new codepipeline.Pipeline(this, "Pipeline", {
-      pipelineName: "MythicalMysfitsPipeline"
-    });
-    pipeline.addStage({
-      stageName: "Source",
-      actions: [sourceAction]
-    });
-    pipeline.addStage({
-      stageName: "Build",
-      actions: [buildAction]
-    });
-    pipeline.addStage({
-      stageName: "Deploy",
-      actions: [deployAction]
-    });
-    
-    new cdk.CfnOutput(this, 'BackendRepositoryCloneUrlHttp', {
-      description: 'Backend Repository CloneUrl HTTP',
-      value: backendRepository.repositoryCloneUrlHttp
-    });
+    const taskRolePolicy = new iam.PolicyStatement();
+    taskRolePolicy.addActions(
+      // Allow the ECS Tasks to download images from ECR
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+      // Allow the ECS tasks to upload logs to CloudWatch
+      "logs:CreateLogStream",
+      "logs:CreateLogGroup",
+      "logs:PutLogEvents"
+    );
+    taskRolePolicy.addAllResources();
 
-    new cdk.CfnOutput(this, 'BackendRepositoryCloneUrlSsh', {
-      description: 'Backend Repository CloneUrl SSH',
-      value: backendRepository.repositoryCloneUrlSsh
-    });
+    this.ecsService.service.taskDefinition.addToTaskRolePolicy(
+      taskRolePolicy
+    );
   }
 }
 ```

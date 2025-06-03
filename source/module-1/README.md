@@ -159,15 +159,22 @@ S3 버킷으로의 접근을 제어하여 CloudFront 배포에서만 접근할 �
 `web-application-stack.ts` 생성자 안에 다음 코드를 작성합니다:
 
 ```typescript
-// Obtain the cloudfront origin access identity so that the s3 bucket may be restricted to it.
-const origin = new cloudfront.OriginAccessIdentity(this, "BucketOrigin", {
-    comment: "todo-list"
+// Use OriginAccessControl instead of OriginAccessIdentity
+const oac = new cloudfront.S3OriginAccessControl(this, "OAC", {
+  description: "OAC for todo-list"
 });
 
-// Restrict the S3 bucket via a bucket policy that only allows our CloudFront distribution
-bucket.grantRead(new iam.CanonicalUserPrincipal(
-  origin.cloudFrontOriginAccessIdentityS3CanonicalUserId
-));
+// Grant read permissions to CloudFront
+bucket.addToResourcePolicy(new iam.PolicyStatement({
+  actions: ['s3:GetObject'],
+  resources: [`${bucket.bucketArn}/*`],
+  principals: [new iam.ServicePrincipal('cloudfront.amazonaws.com')],
+  conditions: {
+    StringEquals: {
+      'AWS:SourceArn': `arn:aws:cloudfront::${cdk.Stack.of(this).account}:distribution/*`
+    }
+  }
+}));
 ```
 
 ### CloudFront 배포
@@ -175,24 +182,16 @@ bucket.grantRead(new iam.CanonicalUserPrincipal(
 다음으로 새로운 CloudFront 웹 배포에 대한 정의를 작성합니다:
 
 ```typescript
-const cdn = new cloudfront.CloudFrontWebDistribution(this, "CloudFront", {
-  originConfigs: [
-    {
-      behaviors: [
-        {
-          isDefaultBehavior: true,
-          maxTtl: undefined,
-          allowedMethods:
-            cloudfront.CloudFrontAllowedMethods.GET_HEAD_OPTIONS
-        }
-      ],
-      s3OriginSource: {
-        s3BucketSource: bucket,
-        originAccessIdentity: origin,
-        originPath: `/web`,
-      }
-    }
-  ]
+const cdn = new cloudfront.Distribution(this, "CloudFront", {
+  defaultBehavior: {
+    origin: origins.S3BucketOrigin.withOriginAccessControl(bucket, {
+      originAccessControl: oac,
+      originPath: '/web'
+    }),
+    allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+    viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.ALLOW_ALL
+  },
+  defaultRootObject: 'index.html'
 });
 ```
 
@@ -220,7 +219,7 @@ new s3deploy.BucketDeployment(this, "DeployWebsite", {
 ```typescript
 new cdk.CfnOutput(this, "CloudFrontURL", {
   description: "The CloudFront distribution URL",
-  value: "https://" + cdn.distributionDomainName
+  value: "http://" + cdn.distributionDomainName
 });
 ```
 
