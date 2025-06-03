@@ -1,6 +1,6 @@
 # 모듈 2: AWS Fargate로 서비스 생성
 
-![Architecture](/images/module-2/architecture-module-2.png)
+![Architecture](../images/module-2/architecture-module-2.png)
 
 **완료에 필요한 시간:** 60분
 

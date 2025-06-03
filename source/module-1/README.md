@@ -1,6 +1,6 @@
 # 모듈 1: 로컬 개발 환경 설정 및 정적 웹사이트 호스팅
 
-![Architecture](/images/module-1/architecture-module-1.png)
+![Architecture](../images/module-1/architecture-module-1.png)
 
 **완료에 필요한 시간:** 20분
 
@@ -304,6 +304,6 @@ cdk destroy TodoList-Website
 
 이것으로 모듈 1을 마치겠습니다.
 
-[모듈 2 진행](/module-2)
+[모듈 2 진행](../module-2/README.md)
 
 ## [AWS Developer Center](https://developer.aws)

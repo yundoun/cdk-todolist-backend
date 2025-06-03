@@ -1,6 +1,6 @@
 # 모듈 3: Amazon DynamoDB로 데이터 계층 추가
 
-![Architecture](/images/module-3/architecture-module-3.png)
+![Architecture](../images/module-3/architecture-module-3.png)
 
 **완료에 필요한 시간:** 20분
 
