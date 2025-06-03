@@ -788,7 +788,7 @@ cdk deploy TodoList-CICD
 
 이것으로 모듈 2를 마치겠습니다.
 
-[모듈 3 진행](/module-3)
+[모듈 3 진행](../module-3/README.md)
 
 
 ## [AWS Developer Center](https://developer.aws)
