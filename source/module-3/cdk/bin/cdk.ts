@@ -9,18 +9,18 @@ import { CiCdStack } from "../lib/cicd-stack";
 import { DynamoDbStack } from '../lib/dynamodb-stack';
 
 const app = new cdk.App();
-new WebApplicationStack(app, "MythicalMysfits-Website");
-const networkStack = new NetworkStack(app, "MythicalMysfits-Network");
-const ecrStack = new EcrStack(app, "MythicalMysfits-ECR");
-const ecsStack = new EcsStack(app, "MythicalMysfits-ECS", {
+new WebApplicationStack(app, "TodoList-Website");
+const networkStack = new NetworkStack(app, "TodoList-Network");
+const ecrStack = new EcrStack(app, "TodoList-ECR");
+const ecsStack = new EcsStack(app, "TodoList-ECS", {
   vpc: networkStack.vpc,
   ecrRepository: ecrStack.ecrRepository
 });
-new CiCdStack(app, "MythicalMysfits-CICD", {
+new CiCdStack(app, "TodoList-CICD", {
     ecrRepository: ecrStack.ecrRepository,
     ecsService: ecsStack.ecsService.service
 });
-const dynamoDbStack = new DynamoDbStack(app, "MythicalMysfits-DynamoDB", {
+const dynamoDbStack = new DynamoDbStack(app, "TodoList-DynamoDB", {
     vpc: networkStack.vpc,
     fargateService: ecsStack.ecsService.service
 });

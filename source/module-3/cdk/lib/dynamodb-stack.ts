@@ -1,3 +1,4 @@
+
 import * as cdk from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -12,61 +13,34 @@ interface DynamoDbStackProps extends cdk.StackProps {
 export class DynamoDbStack extends cdk.Stack {
   public readonly table: dynamodb.Table;
 
+
   constructor(scope: cdk.App, id: string, props: DynamoDbStackProps) {
     super(scope, id);
-    
+
     const dynamoDbEndpoint = props.vpc.addGatewayEndpoint("DynamoDbEndpoint", {
       service: ec2.GatewayVpcEndpointAwsService.DYNAMODB
     });
-    
+
     const dynamoDbPolicy = new iam.PolicyStatement();
     dynamoDbPolicy.addAnyPrincipal();
     dynamoDbPolicy.addActions("*");
     dynamoDbPolicy.addAllResources();
-    
+
     dynamoDbEndpoint.addToPolicy(
       dynamoDbPolicy
     );
-    
+
     this.table = new dynamodb.Table(this, "Table", {
-      tableName: "MysfitsTable",
+      tableName: "TodoTable",
       partitionKey: {
-      name: "MysfitId",
-      type: dynamodb.AttributeType.STRING
+        name: "id",
+        type: dynamodb.AttributeType.NUMBER
       }
     });
-    this.table.addGlobalSecondaryIndex({
-      indexName: "LawChaosIndex",
-      partitionKey: {
-      name: 'LawChaos',
-      type: dynamodb.AttributeType.STRING
-      },
-      sortKey: {
-      name: 'MysfitId',
-      type: dynamodb.AttributeType.STRING
-      },
-      readCapacity: 5,
-      writeCapacity: 5,
-      projectionType: dynamodb.ProjectionType.ALL
-    });
-    this.table.addGlobalSecondaryIndex({
-      indexName: "GoodEvilIndex",
-      partitionKey: {
-      name: 'GoodEvil',
-      type: dynamodb.AttributeType.STRING
-      },
-      sortKey: {
-      name: 'MysfitId',
-      type: dynamodb.AttributeType.STRING
-      },
-      readCapacity: 5,
-      writeCapacity: 5,
-      projectionType: dynamodb.ProjectionType.ALL
-    });
-    
+
     const fargatePolicy = new iam.PolicyStatement();
     fargatePolicy.addActions(
-      //  Allows the ECS tasks to interact with only the MysfitsTable in DynamoDB
+      // ECS 태스크가 DynamoDB의 TodoTable에만 상호 작용할 수 있도록 허용
       "dynamodb:Scan",
       "dynamodb:Query",
       "dynamodb:UpdateItem",
@@ -74,7 +48,7 @@ export class DynamoDbStack extends cdk.Stack {
       "dynamodb:DescribeTable"
     );
     fargatePolicy.addResources(
-      "arn:aws:dynamodb:*:*:table/MysfitsTable*"
+      "arn:aws:dynamodb:*:*:table/TodoTable*"
     );
     props.fargateService.taskDefinition.addToTaskRolePolicy(
       fargatePolicy
