@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
   <!--
-    A registration page where users who wish you use Mythical Mysfits can
-    register with the email address and a password.  The JavaScript below
-    uses the Amazon Cognito JavaScript SDK in order to integrate with the service.
+    TodoList를 사용하려는 사용자가 이메일 주소와 비밀번호로 
+    회원가입할 수 있는 등록 페이지입니다. 아래 JavaScript는 
+    서비스와 통합하기 위해 Amazon Cognito JavaScript SDK를 사용합니다.
   -->
   <head>
-    <title>Register for Mythical Mysfits</title>
+    <title>TodoList 회원가입</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -14,77 +14,126 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script src="js/aws-cognito-sdk.min.js"></script>
     <script src="js/amazon-cognito-identity.min.js"></script>
+    <style>
+      body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+      .container {
+        max-width: 500px;
+        margin: 50px auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        padding: 40px;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+        font-size: 2em;
+      }
+      .form-group {
+        margin-bottom: 20px;
+      }
+      .form-control {
+        padding: 12px;
+        border-radius: 8px;
+        border: 2px solid #ddd;
+        font-size: 16px;
+      }
+      .form-control:focus {
+        border-color: #667eea;
+        box-shadow: none;
+      }
+      .btn-primary {
+        background: #667eea;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-size: 16px;
+        width: 100%;
+      }
+      .btn-primary:hover {
+        background: #5a6fd8;
+      }
+      .text-center {
+        text-align: center;
+        margin-top: 20px;
+      }
+      .text-center a {
+        color: #667eea;
+        text-decoration: none;
+      }
+    </style>
   </head>
-  <body style="background-color:#EBEBEB">
-    <br>
-    <div style="text-align: center">
-      <img src="https://www.mythicalmysfits.com/images/mysfits_banner.gif" width="800px" align="center">
-    </div>
+  <body>
     <div class="container">
-      <h3>Register for Mythical Mysfits!</h3>
-      <form id="userDetails" >
+      <h1>📝 TodoList 회원가입</h1>
+      <form id="userDetails">
         <div class="form-group">
-          <label for="email">Email:</label>
-          <input type="email" class="form-control" id="email" placeholder="Enter email" name="email">
+          <label for="email">이메일:</label>
+          <input type="email" class="form-control" id="email" placeholder="이메일을 입력하세요" name="email" required>
         </div>
         <div class="form-group">
-          <label for="pwd">Password: </label>
-          <input type="password" class="form-control" id="pwd" placeholder="Enter password" name="pwd">
+          <label for="pwd">비밀번호:</label>
+          <input type="password" class="form-control" id="pwd" placeholder="비밀번호를 입력하세요" name="pwd" required>
         </div>
         <div class="form-group">
-          <label for="confirmPwd">Confirm Password:</label>
-          <input type="password" class="form-control" id="confirmPwd" placeholder="Confirm password" name="confirmPwd">
+          <label for="confirmPwd">비밀번호 확인:</label>
+          <input type="password" class="form-control" id="confirmPwd" placeholder="비밀번호를 다시 입력하세요" name="confirmPwd" required>
         </div>
-        <button type="submit" class="btn btn-info">Register</button>
+        <button type="submit" class="btn btn-primary">회원가입</button>
       </form>
+      <div class="text-center">
+        <a href="index.html">메인 페이지로 돌아가기</a>
+      </div>
     </div>
-
   </body>
 
   <script>
+    var cognitoUserPoolId = 'REPLACE_ME';  // example: 'ap-northeast-2_abcd12345'
+    var cognitoUserPoolClientId = 'REPLACE_ME'; // example: 'abcd12345abcd12345abcd12345'
 
-  var cognitoUserPoolId = 'REPLACE_ME';  // example: 'us-east-1_abcd12345'
-  var cognitoUserPoolClientId = 'REPLACE_ME'; // example: 'abcd12345abcd12345abcd12345'
+    $(document).on('click', '.btn-primary', function(event) {
+      event.preventDefault();
 
-  $(document).on('click', '.btn-info', function(event) {
-    event.preventDefault();
+      var poolData = {
+        UserPoolId : cognitoUserPoolId,
+        ClientId : cognitoUserPoolClientId
+      };
+      var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
 
-    var poolData = {
-      UserPoolId : cognitoUserPoolId,
-      ClientId : cognitoUserPoolClientId
-    };
-    var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+      var attributeList = [];
 
-    var attributeList = [];
+      var email = document.getElementById('email').value;
+      var pw = document.getElementById('pwd').value;
+      var confirmPw = document.getElementById('confirmPwd').value;
+      
+      var dataEmail = {
+          Name : 'email',
+          Value : email
+      };
 
+      var attributeEmail = new AmazonCognitoIdentity.CognitoUserAttribute(dataEmail);
+      attributeList.push(attributeEmail);
 
-    var email = document.getElementById('email').value;
-    var pw = document.getElementById('pwd').value;
-    var confirmPw = document.getElementById('confirmPwd').value;
-    var dataEmail = {
-        Name : 'email',
-        Value : email
-    };
-
-    var attributeEmail = new AmazonCognitoIdentity.CognitoUserAttribute(dataEmail);
-
-    attributeList.push(attributeEmail);
-
-    if (pw === confirmPw) {
-      userPool.signUp(email, pw, attributeList, null, function(err, result){
-          if (err) {
-              alert(err.message);
-              return;
-          }
-          cognitoUser = result.user;
-          console.log(cognitoUser);
-          localStorage.setItem('email', email);
-          window.location.replace('confirm.html');
-      });
-    } else {
-      alert('Passwords do not match.')
-    }
-
-  });
+      if (pw === confirmPw) {
+        userPool.signUp(email, pw, attributeList, null, function(err, result){
+            if (err) {
+                alert('회원가입 오류: ' + err.message);
+                return;
+            }
+            cognitoUser = result.user;
+            console.log(cognitoUser);
+            localStorage.setItem('email', email);
+            alert('회원가입이 완료되었습니다! 이메일 인증을 진행해주세요.');
+            window.location.replace('confirm.html');
+        });
+      } else {
+        alert('비밀번호가 일치하지 않습니다.');
+      }
+    });
   </script>
 </html>

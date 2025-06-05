@@ -1,10 +1,10 @@
 {
     "swagger": 2.0,
     "info": {
-        "title": "MysfitsApi"
+        "title": "TodoListApi"
     },
     "securityDefinitions": {
-        "MysfitsUserPoolAuthorizer": {
+        "TodoListUserPoolAuthorizer": {
             "type": "apiKey",
             "name": "Authorization",
             "in": "header",
@@ -103,7 +103,7 @@
                 }
             }
         },
-        "/mysfits": {
+        "/todos": {
             "get": {
                 "responses": {
                     "200": {
@@ -126,7 +126,7 @@
                     "connectionId": "REPLACE_ME_VPC_LINK_ID",
                     "httpMethod": "GET",
                     "type": "HTTP_PROXY",
-                    "uri": "http://REPLACE_ME_NLB_DNS/mysfits",
+                    "uri": "http://REPLACE_ME_NLB_DNS/todos",
                     "responses": {
                         "default": {
                             "statusCode": "200",
@@ -139,63 +139,7 @@
                     }
                 }
             },
-            "options": {
-                "summary": "CORS support",
-                "description": "Enable CORS by returning correct headers\n",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "CORS"
-                ],
-                "x-amazon-apigateway-integration": {
-                    "type": "mock",
-                    "requestTemplates": {
-                        "application/json": "{\n  \"statusCode\" : 200\n}\n"
-                    },
-                    "responses": {
-                        "default": {
-                            "statusCode": "200",
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            },
-                            "responseTemplates": {
-                                "application/json": "{}\n"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Default response for CORS method",
-                        "headers": {
-                            "Access-Control-Allow-Headers": {
-                                "type": "string"
-                            },
-                            "Access-Control-Allow-Methods": {
-                                "type": "string"
-                            },
-                            "Access-Control-Allow-Origin": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/mysfits/{mysfitId}": {
-            "get": {
-                "parameters": [{
-                    "name": "mysfitId",
-                    "in": "path",
-                    "required": true,
-                    "type": "string"
-                }],
+            "post": {
                 "responses": {
                     "200": {
                         "description": "Default response for CORS method",
@@ -213,14 +157,11 @@
                     }
                 },
                 "x-amazon-apigateway-integration": {
-                    "requestParameters": {
-                        "integration.request.path.mysfitId": "method.request.path.mysfitId"
-                    },
                     "connectionType": "VPC_LINK",
                     "connectionId": "REPLACE_ME_VPC_LINK_ID",
-                    "httpMethod": "GET",
+                    "httpMethod": "POST",
                     "type": "HTTP_PROXY",
-                    "uri": "http://REPLACE_ME_NLB_DNS/mysfits/{mysfitId}",
+                    "uri": "http://REPLACE_ME_NLB_DNS/todos",
                     "responses": {
                         "default": {
                             "statusCode": "200",
@@ -282,10 +223,10 @@
                 }
             }
         },
-        "/mysfits/{mysfitId}/adopt": {
-            "post": {
+        "/todos/{todoId}": {
+            "delete": {
                 "parameters": [{
-                    "name": "mysfitId",
+                    "name": "todoId",
                     "in": "path",
                     "required": true,
                     "type": "string"
@@ -307,19 +248,19 @@
                     }
                 },
                 "security": [{
-                    "MysfitsUserPoolAuthorizer": [
+                    "TodoListUserPoolAuthorizer": [
 
                     ]
                 }],
                 "x-amazon-apigateway-integration": {
                     "requestParameters": {
-                        "integration.request.path.mysfitId": "method.request.path.mysfitId"
+                        "integration.request.path.todoId": "method.request.path.todoId"
                     },
                     "connectionType": "VPC_LINK",
                     "connectionId": "REPLACE_ME_VPC_LINK_ID",
-                    "httpMethod": "POST",
+                    "httpMethod": "DELETE",
                     "type": "HTTP_PROXY",
-                    "uri": "http://REPLACE_ME_NLB_DNS/mysfits/{mysfitId}/adopt",
+                    "uri": "http://REPLACE_ME_NLB_DNS/todos/{todoId}",
                     "responses": {
                         "default": {
                             "statusCode": "200",
@@ -381,10 +322,10 @@
                 }
             }
         },
-        "/mysfits/{mysfitId}/like": {
+        "/todos/{todoId}/toggle": {
             "post": {
                 "parameters": [{
-                    "name": "mysfitId",
+                    "name": "todoId",
                     "in": "path",
                     "required": true,
                     "type": "string"
@@ -406,7 +347,7 @@
                     }
                 },
                 "security": [{
-                    "MysfitsUserPoolAuthorizer": [
+                    "TodoListUserPoolAuthorizer": [
 
                     ]
                 }],
@@ -422,28 +363,13 @@
                         }
                     },
                     "requestParameters": {
-                        "integration.request.path.mysfitId": "method.request.path.mysfitId"
+                        "integration.request.path.todoId": "method.request.path.todoId"
                     },
                     "connectionType": "VPC_LINK",
                     "connectionId": "REPLACE_ME_VPC_LINK_ID",
                     "httpMethod": "POST",
-                    "security": [{
-                        "MysfitsUserPoolAuthorizer": [
-
-                        ]
-                    }],
                     "type": "HTTP_PROXY",
-                    "uri": "http://REPLACE_ME_NLB_DNS/mysfits/{mysfitId}/like",
-                    "responses": {
-                        "default": {
-                            "statusCode": "200",
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        }
-                    }
+                    "uri": "http://REPLACE_ME_NLB_DNS/todos/{todoId}/toggle"
                 }
             },
             "options": {
