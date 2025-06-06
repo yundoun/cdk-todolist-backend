@@ -1,6 +1,6 @@
 # 모듈 4: Amazon API Gateway와 AWS Cognito로 사용자 및 API 기능 추가
 
-![Architecture](/images/module-4/architecture-module-4.png)
+![Architecture](../images/module-4/architecture-module-4.png)
 
 **완료에 필요한 시간:** 60분
 
@@ -33,7 +33,7 @@ API Gateway는 HTTPS 및 CORS 지원 뿐만 아니라, Cognito User Pool과 통�
 모든 TodoList 방문자의 정보가 저장될 **Cognito User Pool**을 생성하기 위해, Cognito 스택을 정의할 새로운 TypeScript 파일을 만들겠습니다:
 
 ```sh
-cd ~/environment/workshop/cdk
+cd cdk/
 touch lib/cognito-stack.ts
 ```
 
@@ -68,7 +68,6 @@ public readonly userPoolClient: cognito.UserPoolClient;
 ```typescript
 this.userPool = new cognito.UserPool(this, 'UserPool', {
   userPoolName: 'TodoListUserPool',
-  selfSignUpEnabled: true,
   autoVerify: {
     email: true
   }
@@ -102,7 +101,7 @@ new cdk.CfnOutput(this, "CognitoUserPoolClient", {
 });
 ```
 
-이걸로 `cognito_stack.ts` 파일은 다음과 같아야합니다:
+이걸로 `cognito-stack.ts` 파일은 다음과 같아야합니다:
 
 ```typescript
 import * as cdk from 'aws-cdk-lib';
@@ -188,9 +187,12 @@ const dynamoDbStack = new DynamoDbStack(app, "TodoList-DynamoDB", {
 const cognito = new CognitoStack(app,  "TodoList-Cognito");
 ```
 
-이제 Cognito 리소스를 배포합니다:
+이제 Cognito 리소스를 배포합니다. 
+`npm run build` 명령어를 실행 할 경우 로컬에서 컴파일 오류가 없는지 확인할 수 있습니다. 
+그 후 AWS 계정에 애플리케이션을 배포합니다:
 
 ```sh
+npm run build
 cdk deploy TodoList-Cognito
 ```
 
@@ -200,99 +202,209 @@ cdk deploy TodoList-Cognito
 
 #### API Gateway VPC Link 생성
 
-API Gateway가 NLB와 통신할 수 있도록 하기 위해, API Gateway VPC Link를 생성해야 합니다. VPC Link를 사용하면 API Gateway가 VPC 내부의 AWS 리소스에 액세스할 수 있습니다.
+다음으로 기존 Flask 서비스 앞에 새로운 RESTful API를 생성하여 NLB가 요청을 받기 전에 요청 권한 부여를 수행하는 부분을 진행하겠습니다. 모듈 개요에 설명한 것 처럼, **Amazon API Gateway**로 이 작업을 수행합니다. API Gateway를 NLB와 프라이빗하게 통합하기 위해, **API Gateway VPCLink**를 구성하여 API Gateway가 VPC 내에서 프라이빗하게 호스팅되는 백엔드 웹 서비스와 직접적으로 통합될 수 있도록 합니다.
 
-새로운 CDK 스택 파일 생성:
+> **참고:** 워크샵의 목적을 위해, NLB는 이전 모듈에서 직접 호출될 수 있도록 *internet-facing*으로 생성하였습니다. 이로 인해, 이 모듈 이후 API에 승인 토큰이 필요함에도 불구하고, NLB는 여전히 API Gateway API 뒤에 퍼블릭하게 열려있습니다. 실제 시나리오에서는 처음부터 NLB를 *internal*로 생성하거나 내부 로드 밸런서를 생성하여 기존걸 대체하는게 좋습니다. API Gateway는 인터넷 연결 API 권한 부여 전략이기 때문입니다. 시간 관계상, 퍼블릭하게 접근할 수 있도록 생성된 NLB를 그대로 사용하겠습니다.
+
+#### Swagger를 사용한 REST API 생성
+
+TodoList REST API는 JSON을 통해 API를 명시하기 위해 널리 사용되는 오픈 소스 프레임워크인 **Swagger**를 사용하여 정의 됩니다. API의 Swagger 정의는 `api/api-swagger.json`에 위치하고 있습니다. 이 파일을 열면 REST API와 그 안에 정의된 리소스, 메서드, 설정을 확인할 수 있습니다.
+
+API 정의 내의 `securityDefinitions` 객체는 Authorization 헤더를 사용하여 apiKey 인증 메커니즘을 설정했음을 나타냅니다. AWS가 `x-amazon-api-gateway-` 접두사를 사용하여 Swagger에 사용자 정의 확장을 제공한걸 알 수 있을 것입니다. 이 확장을 통해 API Gateway 고유 기능을 일반적인 Swagger 파일에 추가하여 API Gateway 고유 기능의 이점을 얻을 수 있습니다.
+
+AWS CDK로 VPCLink와 API Gateway를 생성하기 위해 `cdk/lib` 폴더 안에서 `apigateway-stack.ts` 이라는 파일을 생성합니다:
 
 ```sh
-touch lib/api-gateway-stack.ts
+touch lib/apigateway-stack.ts
 ```
 
-다음과 같이 API Gateway 스택을 정의합니다:
+방금 생성한 파일에서 이전과 같이 스켈레톤 CDK Stack 구조를 정의하고 클래스명을 `APIGatewayStack`으로 지정합니다:
 
 ```typescript
 import * as cdk from 'aws-cdk-lib';
-import * as apigateway from 'aws-cdk-lib/aws-apigateway';
-import * as cognito from 'aws-cdk-lib/aws-cognito';
-import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 
-interface ApiGatewayStackProps extends cdk.StackProps {
-  userPool: cognito.UserPool;
-  loadBalancer: elbv2.NetworkLoadBalancer;
+interface APIGatewayStackProps extends cdk.StackProps {
+  loadBalancerDnsName: string;
+  loadBalancerArn: string;
+  userPoolId: string;
 }
 
-export class ApiGatewayStack extends cdk.Stack {
+export class APIGatewayStack extends cdk.Stack {
+  constructor(scope: cdk.App, id:string, props: APIGatewayStackProps) {
+    super(scope, id);
 
-  public readonly api: apigateway.RestApi;
-
-  constructor(scope: cdk.App, id: string, props: ApiGatewayStackProps) {
-    super(scope, id, props);
-
-    // VPC Link 생성
-    const vpcLink = new apigateway.VpcLink(this, 'TodoListVpcLink', {
-      targets: [props.loadBalancer]
-    });
-
-    // API Gateway 생성
-    this.api = new apigateway.RestApi(this, 'TodoListApi', {
-      restApiName: 'TodoList Service',
-      description: 'TodoList API with authentication'
-    });
-
-    // Cognito 권한 부여자 생성
-    const authorizer = new apigateway.CognitoUserPoolsAuthorizer(this, 'TodoListAuthorizer', {
-      cognitoUserPools: [props.userPool]
-    });
-
-    // API 경로 및 메서드 정의는 추후 추가...
+    // 스택을 정의하는 코드가 여기에 위치합니다
   }
 }
 ```
 
-### 배포할 새로운 API Gateway API 정의
+그런 후 `bin/cdk.ts` 파일안의 CDK 애플리케이션에 APIGatewayStack을 추가합니다. 완료 후, `bin/cdk.ts` 파일은 다음처럼 보일 것입니다:
 
-우리는 이미 API Gateway Swagger 정의를 `api/api-swagger.json`에 생성해 두었습니다. 이 파일에는 다음이 포함되어 있습니다:
+```typescript
+#!/usr/bin/env node
+import 'source-map-support/register';
+import * as cdk from 'aws-cdk-lib';
+import { WebApplicationStack } from "../lib/web-application-stack";
+import { NetworkStack } from "../lib/network-stack";
+import { EcrStack } from "../lib/ecr-stack";
+import { EcsStack } from "../lib/ecs-stack";
+import { CiCdStack } from "../lib/cicd-stack";
+import { DynamoDbStack } from '../lib/dynamodb-stack';
+import { CognitoStack } from '../lib/cognito-stack';
+import { APIGatewayStack } from "../lib/apigateway-stack";
 
-* **GET /todos** - 모든 할일 목록 조회 (인증 불필요)
-* **POST /todos** - 새로운 할일 생성 (인증 불필요)
-* **POST /todos/{id}/toggle** - 할일 완료 상태 토글 (인증 필요)
-* **DELETE /todos/{id}** - 할일 삭제 (인증 필요)
-
-API Gateway 배포를 위해 다음 명령을 실행합니다:
-
-```sh
-cd ~/environment/workshop
-aws apigateway import-rest-api --body fileb://api/api-swagger.json
+const app = new cdk.App();
+new WebApplicationStack(app, "TodoList-Website");
+const networkStack = new NetworkStack(app, "TodoList-Network");
+const ecrStack = new EcrStack(app, "TodoList-ECR");
+const ecsStack = new EcsStack(app, "TodoList-ECS", {
+    vpc: networkStack.vpc,
+    ecrRepository: ecrStack.ecrRepository
+});
+new CiCdStack(app, "TodoList-CICD", {
+    ecrRepository: ecrStack.ecrRepository,
+    ecsService: ecsStack.ecsService.service
+});
+const dynamoDbStack = new DynamoDbStack(app, "TodoList-DynamoDB", {
+    vpc: networkStack.vpc,
+    fargateService: ecsStack.ecsService.service
+});
+const cognito = new CognitoStack(app,  "TodoList-Cognito");
+new APIGatewayStack(app, "TodoList-APIGateway", {
+  userPoolId: cognito.userPool.userPoolId,
+  loadBalancerArn: ecsStack.ecsService.loadBalancer.loadBalancerArn,
+  loadBalancerDnsName: ecsStack.ecsService.loadBalancer.loadBalancerDnsName
+});
 ```
 
-### 웹사이트 콘텐츠 업데이트
+`APIGatewayStack`에서, 작성할 코드를 위해 class import를 정의합니다:
 
-`web/` 디렉토리의 웹사이트 코드를 업데이트하여 새로운 API Gateway 엔드포인트와 Cognito 사용자 풀을 사용하도록 합니다.
+```typescript
+import * as cdk from 'aws-cdk-lib';
+import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+import * as fs from 'fs';
+import * as path from 'path';
+```
 
-1. **index.html** - 메인 TodoList 애플리케이션
-2. **register.html** - 사용자 회원가입 페이지  
-3. **confirm.html** - 이메일 인증 페이지
+이제, `APIGatewayStack` 클래스의 생성자에서 모듈 2에서 생성한 ECS 클러스터로부터 Network Load Balancer를 import 하겠습니다:
 
-각 파일에서 다음 변수들을 실제 값으로 교체해야 합니다:
+```typescript
+const nlb = elbv2.NetworkLoadBalancer.fromNetworkLoadBalancerAttributes(this, 'NLB', {
+  loadBalancerArn: props.loadBalancerArn,
+});
+```
 
-* `todosApiEndpoint` = 생성된 API Gateway 엔드포인트 URL
-* `cognitoUserPoolId` = 생성된 Cognito User Pool ID
-* `cognitoUserPoolClientId` = 생성된 Cognito User Pool Client ID
-* `awsRegion` = 'ap-northeast-2'
+그런 후 API Gateway를 위한 VPCLink를 정의하고 NLB를 VPCLink의 타겟으로 붙입니다:
 
-### S3에 웹사이트 업로드
+```typescript
+const vpcLink = new apigateway.VpcLink(this, 'VPCLink', {
+  description: 'VPCLink for our REST API',
+  vpcLinkName: 'TodoListApiVpcLink',
+  targets: [
+    nlb
+  ]
+});
+```
 
-업데이트된 웹사이트 파일들을 S3 버킷에 업로드합니다:
+이제 생성자 밑에 swagger 파일에 명시되어있는 API를 import할 헬퍼 함수를 작성하겠습니다:
+
+```typescript
+private generateSwaggerSpec(dnsName: string, userPoolId: string, vpcLink: apigateway.VpcLink): string {
+  try {
+    const schemaFilePath = path.resolve(__dirname + '/../../source/module-4/api/api-swagger.json');
+    const apiSchema = fs.readFileSync(schemaFilePath);
+    let schema: string = apiSchema.toString().replace(/REPLACE_ME_REGION/gi, cdk.Aws.REGION);
+    schema = schema.toString().replace(/REPLACE_ME_ACCOUNT_ID/gi, cdk.Aws.ACCOUNT_ID);
+    schema = schema.toString().replace(/REPLACE_ME_COGNITO_USER_POOL_ID/gi, userPoolId);
+    schema = schema.toString().replace(/REPLACE_ME_VPC_LINK_ID/gi, vpcLink.vpcLinkId);
+    schema = schema.toString().replace(/REPLACE_ME_NLB_DNS/gi, dnsName);
+    return schema;
+  } catch (exception) {
+    throw new Error('Failed to generate swagger specification.  Please refer to the Module 4 readme for instructions.');
+  }
+}
+```
+
+마지막으로 생성자로 돌아가 API Gateway가 우리가 작성한 헬퍼 함수를 활용하도록 합니다:
+
+```typescript
+const schema = this.generateSwaggerSpec(props.loadBalancerDnsName, props.userPoolId, vpcLink);
+const jsonSchema = JSON.parse(schema);
+const api = new apigateway.CfnRestApi(this, 'Schema', {
+  name: 'TodoListApi',
+  body: jsonSchema,
+  endpointConfiguration: {
+    types: [
+      apigateway.EndpointType.REGIONAL
+    ]
+  },
+  failOnWarnings: true
+});
+
+const prod = new apigateway.CfnDeployment(this, 'Prod', {
+    restApiId: api.ref,
+    stageName: 'prod'
+});
+
+new cdk.CfnOutput(this, 'APIID', {
+  value: api.ref,
+  description: 'API Gateway ID'
+})
+```
+
+완료 후 스택을 배포합니다:
 
 ```sh
-cd ~/environment/workshop/web
-aws s3 cp . s3://REPLACE_ME_BUCKET_NAME --recursive --exclude "*" --include "*.html" --include "*.js" --include "*.css"
+cdk deploy TodoList-APIGateway
 ```
+
+이를 통해 사용자 권한 부여가 가능한 REST API를 인터넷에 배포하고 사용 가능하게 됩니다. API는 다음 주소로 접근 가능합니다:
+
+```sh
+https://REPLACE_ME_WITH_API_ID.execute-api.REPLACE_ME_WITH_REGION.amazonaws.com/prod/todos
+```
+
+위의 주소를 복사하고 적절한 값으로 교체한 뒤 브라우저의 주소창에 입력합니다. TodoList JSON 응답을 다시 볼 수 있을 것입니다. 그러나 우리가 추가한 할일 완료 토글과 삭제 등의 추가 기능의 Flask 백엔드는 이미 구현되어 있습니다.
+
+다음으로 웹사이트 업데이트를 처리해보겠습니다.
+
+### TodoList 웹사이트 업데이트
+
+새 버전의 TodoList 웹사이트는 사용자 등록과 로그인에 사용될 추가적인 HTML과 JavaScript 코드를 포함하고 있습니다. 이 코드는 AWS Cognito JavaScript SDK와 상호작용하여 필요한 모든 API 호출에 대한 등록, 인증 및 권한 부여 관리에 도움을 줍니다.
+
+새 버전의 TodoList 웹사이트는 `web/` 디렉토리에 위치해 있습니다. 
+
+웹사이트 파일들의 `index.html`, `register.html`, `confirm.html` 파일을 열고, 작은 따옴표 안의 **REPLACE_ME** 문자열을 위에서 복사한 값으로 바꾸고 파일을 저장합니다:
+
+```sh
+cd ../
+cp -r source/module-4/web/* ./web
+```
+
+> **참고:** Cognito UserPool ID와 Cognito UserPool Client ID는 이전에 저장한 값입니다 (예: `ap-northeast-2_ab12345YZ`와 `6p3bs000no6a4ue1idruvd05ad`). API Gateway 엔드포인트와 AWS 리전의 값을 검색하려면 다음 명령을 사용할 수 있습니다:
+
+```sh
+aws apigateway get-rest-apis --query 'items[?name==`TodoListApi`][id]' --output text
+```
+
+```sh
+aws configure get region
+```
+
+이제 S3 호스팅 웹사이트를 업데이트합니다:
+
+```sh
+cd cdk/
+cdk deploy TodoList-Website
+```
+
+브라우저에서 TodoList 웹사이트를 새로고침하여 새로 추가된 기능들이 동작하는지 확인합니다!
 
 ### 테스트
 
 1. CloudFront 배포 URL을 방문합니다
-2. 새로운 사용자로 회원가입을 시도합니다
+2. 새로운 사용자로 회원가입을 시도합니다  
 3. 이메일 인증을 완료합니다
 4. 로그인하여 할일 생성, 완료 토글, 삭제 기능을 테스트합니다
 
@@ -306,7 +418,8 @@ aws s3 cp . s3://REPLACE_ME_BUCKET_NAME --recursive --exclude "*" --include "*.h
 - 인증이 필요한 기능 (할일 완료/삭제)에 대한 접근 제어
 - 반응형 웹 UI
 
-다음 모듈에서는 추가적인 기능들을 구현해보겠습니다.
+이것으로 모듈 4를 마치겠습니다.
 
+[모듈 5 진행](../module-5/README.md)
 
 ## [AWS Developer Center](https://developer.aws)
