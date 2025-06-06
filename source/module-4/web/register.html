@@ -6,134 +6,81 @@
     서비스와 통합하기 위해 Amazon Cognito JavaScript SDK를 사용합니다.
   -->
   <head>
-    <title>TodoList 회원가입</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>할 일 목록 - 회원가입</title>
+    <link rel="stylesheet" href="style.css">
     <script src="js/aws-cognito-sdk.min.js"></script>
     <script src="js/amazon-cognito-identity.min.js"></script>
-    <style>
-      body {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        padding: 20px;
-      }
-      .container {
-        max-width: 500px;
-        margin: 50px auto;
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        padding: 40px;
-      }
-      h1 {
-        text-align: center;
-        color: #333;
-        margin-bottom: 30px;
-        font-size: 2em;
-      }
-      .form-group {
-        margin-bottom: 20px;
-      }
-      .form-control {
-        padding: 12px;
-        border-radius: 8px;
-        border: 2px solid #ddd;
-        font-size: 16px;
-      }
-      .form-control:focus {
-        border-color: #667eea;
-        box-shadow: none;
-      }
-      .btn-primary {
-        background: #667eea;
-        border: none;
-        padding: 12px 30px;
-        border-radius: 8px;
-        font-size: 16px;
-        width: 100%;
-      }
-      .btn-primary:hover {
-        background: #5a6fd8;
-      }
-      .text-center {
-        text-align: center;
-        margin-top: 20px;
-      }
-      .text-center a {
-        color: #667eea;
-        text-decoration: none;
-      }
-    </style>
   </head>
   <body>
     <div class="container">
-      <h1>📝 TodoList 회원가입</h1>
-      <form id="userDetails">
-        <div class="form-group">
-          <label for="email">이메일:</label>
-          <input type="email" class="form-control" id="email" placeholder="이메일을 입력하세요" name="email" required>
+      <div class="card">
+        <div class="card-header">
+          <h1 class="card-title">회원가입</h1>
+          <p class="card-subtitle">새 계정을 만드세요</p>
         </div>
-        <div class="form-group">
-          <label for="pwd">비밀번호:</label>
-          <input type="password" class="form-control" id="pwd" placeholder="비밀번호를 입력하세요" name="pwd" required>
+        <div class="card-content">
+          <form id="register-form">
+            <div class="form-group">
+              <input type="email" id="email" placeholder="이메일" required>
+            </div>
+            <div class="form-group">
+              <input type="password" id="password" placeholder="비밀번호" required>
+            </div>
+            <div class="form-group">
+              <input type="password" id="confirm-password" placeholder="비밀번호 확인" required>
+            </div>
+            <button type="submit" class="button">회원가입</button>
+          </form>
+          <div class="text-center" style="margin-top: 1rem;">
+            <a href="index.html" class="button">메인 페이지로 돌아가기</a>
+          </div>
         </div>
-        <div class="form-group">
-          <label for="confirmPwd">비밀번호 확인:</label>
-          <input type="password" class="form-control" id="confirmPwd" placeholder="비밀번호를 다시 입력하세요" name="confirmPwd" required>
-        </div>
-        <button type="submit" class="btn btn-primary">회원가입</button>
-      </form>
-      <div class="text-center">
-        <a href="index.html">메인 페이지로 돌아가기</a>
       </div>
     </div>
-  </body>
 
-  <script>
-    var cognitoUserPoolId = 'REPLACE_ME';  // example: 'ap-northeast-2_abcd12345'
-    var cognitoUserPoolClientId = 'REPLACE_ME'; // example: 'abcd12345abcd12345abcd12345'
+    <script>
+      var cognitoUserPoolId = 'REPLACE_ME';  // 예시: 'ap-northeast-2_abcd12345'
+      var cognitoUserPoolClientId = 'REPLACE_ME'; // 예시: 'abcd12345abcd12345abcd12345'
 
-    $(document).on('click', '.btn-primary', function(event) {
-      event.preventDefault();
+      document.getElementById('register-form').addEventListener('submit', function(event) {
+        event.preventDefault();
 
-      var poolData = {
-        UserPoolId : cognitoUserPoolId,
-        ClientId : cognitoUserPoolClientId
-      };
-      var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
 
-      var attributeList = [];
+        if (password !== confirmPassword) {
+          alert('비밀번호가 일치하지 않습니다.');
+          return;
+        }
 
-      var email = document.getElementById('email').value;
-      var pw = document.getElementById('pwd').value;
-      var confirmPw = document.getElementById('confirmPwd').value;
-      
-      var dataEmail = {
-          Name : 'email',
-          Value : email
-      };
+        const poolData = {
+          UserPoolId: cognitoUserPoolId,
+          ClientId: cognitoUserPoolClientId
+        };
+        const userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
 
-      var attributeEmail = new AmazonCognitoIdentity.CognitoUserAttribute(dataEmail);
-      attributeList.push(attributeEmail);
+        const attributeList = [];
+        const dataEmail = {
+          Name: 'email',
+          Value: email
+        };
+        const attributeEmail = new AmazonCognitoIdentity.CognitoUserAttribute(dataEmail);
+        attributeList.push(attributeEmail);
 
-      if (pw === confirmPw) {
-        userPool.signUp(email, pw, attributeList, null, function(err, result){
-            if (err) {
-                alert('회원가입 오류: ' + err.message);
-                return;
-            }
-            cognitoUser = result.user;
-            console.log(cognitoUser);
-            localStorage.setItem('email', email);
-            alert('회원가입이 완료되었습니다! 이메일 인증을 진행해주세요.');
-            window.location.replace('confirm.html');
+        userPool.signUp(email, password, attributeList, null, function(err, result) {
+          if (err) {
+            alert('회원가입 오류: ' + err.message);
+            return;
+          }
+          console.log(result.user);
+          localStorage.setItem('email', email);
+          alert('회원가입이 완료되었습니다! 이메일 인증을 진행해주세요.');
+          window.location.href = 'confirm.html';
         });
-      } else {
-        alert('비밀번호가 일치하지 않습니다.');
-      }
-    });
-  </script>
+      });
+    </script>
+  </body>
 </html>

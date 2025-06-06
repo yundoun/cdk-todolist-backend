@@ -5,463 +5,102 @@
     로그인한 사용자는 할일의 완료 상태를 토글하고 할일을 삭제할 수 있습니다.
   -->
   <head>
-    <title>TodoList 앱</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>할 일 목록 - 사용자 인증 기능</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://sdk.amazonaws.com/js/aws-sdk-2.135.0.min.js"></script>
     <script src="js/aws-cognito-sdk.min.js"></script>
     <script src="js/amazon-cognito-identity.min.js"></script>
-    <style>
-      body {
-        font-family: 'Arial', sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        margin: 0;
-        padding: 20px;
-      }
-      .container {
-        max-width: 600px;
-        margin: 0 auto;
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        padding: 30px;
-      }
-      h1 {
-        text-align: center;
-        color: #333;
-        margin-bottom: 30px;
-        font-size: 2.5em;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-      }
-      .auth-section {
-        text-align: center;
-        margin-bottom: 20px;
-        padding: 15px;
-        background: #f8f9fa;
-        border-radius: 10px;
-      }
-      .todo-form {
-        display: flex;
-        margin-bottom: 20px;
-      }
-      .todo-form input {
-        flex-grow: 1;
-        padding: 12px;
-        border: 2px solid #ddd;
-        border-radius: 8px 0 0 8px;
-        font-size: 16px;
-        outline: none;
-      }
-      .todo-form input:focus {
-        border-color: #667eea;
-      }
-      .todo-form button {
-        padding: 12px 20px;
-        background: #667eea;
-        color: white;
-        border: none;
-        border-radius: 0 8px 8px 0;
-        cursor: pointer;
-        font-size: 16px;
-      }
-      .todo-form button:hover {
-        background: #5a6fd8;
-      }
-      .todo-item {
-        display: flex;
-        align-items: center;
-        padding: 15px;
-        margin-bottom: 10px;
-        background: #f8f9fa;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-      }
-      .todo-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-      }
-      .todo-item.completed {
-        opacity: 0.7;
-      }
-      .todo-item input[type="checkbox"] {
-        margin-right: 15px;
-        transform: scale(1.2);
-      }
-      .todo-text {
-        flex-grow: 1;
-        font-size: 16px;
-      }
-      .todo-text.completed {
-        text-decoration: line-through;
-        color: #888;
-      }
-      .delete-btn {
-        background: #e74c3c;
-        color: white;
-        border: none;
-        padding: 8px 12px;
-        border-radius: 5px;
-        cursor: pointer;
-        margin-left: 10px;
-      }
-      .delete-btn:hover {
-        background: #c0392b;
-      }
-      .delete-btn:disabled {
-        background: #cccccc;
-        cursor: not-allowed;
-      }
-      .btn-auth {
-        margin: 5px;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-block;
-      }
-      .btn-primary {
-        background: #007bff;
-        color: white;
-      }
-      .btn-danger {
-        background: #dc3545;
-        color: white;
-      }
-      .btn-success {
-        background: #28a745;
-        color: white;
-      }
-      .d-none {
-        display: none !important;
-      }
-    </style>
   </head>
   <body>
     <div class="container">
-      <h1>📝 나의 할일 목록</h1>
-      
-      <!-- 인증 섹션 -->
-      <div class="auth-section">
-        <div id="loggedOutSection">
-          <p>할일 완료 및 삭제를 위해 로그인해주세요.</p>
-          <button type="button" id="logInButton" class="btn-auth btn-primary" data-toggle="modal" data-target="#loginModal">로그인 / 회원가입</button>
+      <div class="card">
+        <div class="card-header">
+          <h1 class="card-title">할 일 목록</h1>
+          <p class="card-subtitle">완료 및 삭제 기능에는 로그인이 필요합니다</p>
         </div>
-        <div id="loggedInSection" class="d-none">
-          <p>로그인 상태입니다.</p>
-          <button type="button" id="logOutButton" class="btn-auth btn-danger">로그아웃</button>
+
+        <!-- 로그인 상태 표시 -->
+        <div class="auth-section">
+          <div id="logged-out-section" class="auth-info">
+            <span>로그인하지 않음</span>
+            <button id="login-button" class="button">로그인</button>
+            <a href="register.html" class="button">회원가입</a>
+          </div>
+          <div id="logged-in-section" class="auth-info hidden">
+            <span>로그인됨</span>
+            <button id="logout-button" class="button">로그아웃</button>
+          </div>
+        </div>
+
+        <div class="card-content">
+          <!-- 할 일 추가 폼 -->
+          <form id="todo-form" class="todo-form">
+            <input type="text" id="todo-input" placeholder="할 일을 입력하세요" class="todo-input">
+            <button type="submit" id="add-button" class="button">추가</button>
+          </form>
+
+          <!-- 로딩 표시 -->
+          <p id="loading-message" class="text-center">데이터를 불러오는 중...</p>
+
+          <!-- 할 일 목록 -->
+          <div id="todo-list" class="todo-list"></div>
+
+          <!-- 할 일 없음 메시지 -->
+          <p id="empty-message" class="text-center text-muted hidden">할 일이 없습니다</p>
+
+          <!-- 오류 메시지 -->
+          <p id="error-message" class="text-center text-error hidden">데이터를 불러오는 중 오류가 발생했습니다.</p>
         </div>
       </div>
-
-      <!-- 할일 추가 폼 -->
-      <div class="todo-form">
-        <input type="text" id="todoInput" placeholder="새로운 할일을 입력하세요...">
-        <button type="button" id="addBtn">추가</button>
-      </div>
-
-      <!-- 할일 목록 -->
-      <div id="todoList"></div>
     </div>
 
     <!-- 로그인 모달 -->
-    <div class="modal fade" id="loginModal" tabindex="-1" role="dialog" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">로그인</h5>
-            <button type="button" class="close" data-dismiss="modal">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <form id="loginForm">
-              <div class="form-group">
-                <input type="email" class="form-control" id="email" placeholder="이메일" required />
-              </div>
-              <div class="form-group">
-                <input type="password" class="form-control" id="pwd" placeholder="비밀번호" required />
-              </div>
-              <button type="submit" class="btn btn-primary btn-block">로그인</button>
-            </form>
-            <div class="text-center mt-3">
-              <a href="register.html" class="btn btn-success">회원가입</a>
-            </div>
-          </div>
+    <div id="login-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>로그인</h3>
+          <button id="close-modal" class="close-button">&times;</button>
         </div>
+        <form id="login-form">
+          <div class="form-group">
+            <input type="email" id="email" placeholder="이메일" required />
+          </div>
+          <div class="form-group">
+            <input type="password" id="password" placeholder="비밀번호" required />
+          </div>
+          <button type="submit" class="button">로그인</button>
+        </form>
       </div>
     </div>
+
+    <!-- 할 일 항목 템플릿 -->
+    <template id="todo-item-template">
+      <div class="todo-item">
+        <div class="todo-item-content">
+          <input type="checkbox" class="todo-checkbox">
+          <span class="todo-text"></span>
+        </div>
+        <div class="todo-item-actions">
+          <button class="button-icon delete-button" title="삭제">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18"></path>
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </template>
 
     <script>
       // API 엔드포인트 및 Cognito 설정
-      var todosApiEndpoint = 'REPLACE_ME'; // example: 'https://abcd12345.execute-api.ap-northeast-2.amazonaws.com/prod'
-      var cognitoUserPoolId = 'REPLACE_ME';  // example: 'ap-northeast-2_abcd12345'
-      var cognitoUserPoolClientId = 'REPLACE_ME'; // example: 'abcd12345abcd12345abcd12345'
-      var awsRegion = 'REPLACE_ME'; // example: 'ap-northeast-2'
-
-      // 전역 변수
-      let todos = [];
-      let isLoggedIn = false;
-
-      // 초기화
-      $(document).ready(function() {
-        initializeStorage();
-        checkLoginStatus();
-        loadTodos();
-        
-        // 이벤트 리스너 등록
-        $('#addBtn').click(addTodo);
-        $('#todoInput').keypress(function(e) {
-          if (e.which == 13) {
-            addTodo();
-          }
-        });
-        $('#loginForm').submit(loginUser);
-        $('#logOutButton').click(logoutUser);
-      });
-
-      function initializeStorage() {
-        var identityPoolId = cognitoUserPoolId;
-        var userPoolId = cognitoUserPoolId;
-        var clientId = cognitoUserPoolClientId;
-        var loginPrefix = 'cognito-idp.' + awsRegion + '.amazonaws.com/' + identityPoolId;
-
-        localStorage.setItem('identityPoolId', identityPoolId);
-        localStorage.setItem('userPoolId', userPoolId);
-        localStorage.setItem('clientId', clientId);
-        localStorage.setItem('loginPrefix', loginPrefix);
-      }
-
-      function checkLoginStatus() {
-        var configString = localStorage.getItem("awsConfig");
-        var config = JSON.parse(configString);
-        if(config != null) {
-          refreshAWSCredentials();
-          showLoggedInState();
-        } else {
-          showLoggedOutState();
-        }
-      }
-
-      function showLoggedInState() {
-        isLoggedIn = true;
-        $("#loggedOutSection").addClass("d-none");
-        $("#loggedInSection").removeClass("d-none");
-        $("#loginModal").modal("hide");
-      }
-
-      function showLoggedOutState() {
-        isLoggedIn = false;
-        $("#loggedOutSection").removeClass("d-none");
-        $("#loggedInSection").addClass("d-none");
-      }
-
-      function loginUser(event) {
-        event.preventDefault();
-        
-        var email = document.getElementById('email').value;
-        var password = document.getElementById('pwd').value;
-        
-        var poolData = {
-          UserPoolId: cognitoUserPoolId,
-          ClientId: cognitoUserPoolClientId
-        };
-        
-        var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
-        var userData = {
-          Username: email,
-          Pool: userPool
-        };
-        
-        var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
-        var authenticationData = {
-          Username: email,
-          Password: password
-        };
-        
-        var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails(authenticationData);
-        
-        cognitoUser.authenticateUser(authenticationDetails, {
-          onSuccess: function(result) {
-            console.log('로그인 성공');
-            var accessToken = result.getAccessToken().getJwtToken();
-            var idToken = result.getIdToken().getJwtToken();
-            var refreshToken = result.getRefreshToken().getToken();
-            
-            var sessionTokens = {
-              IdToken: result.idToken,
-              AccessToken: result.accessToken,
-              RefreshToken: result.refreshToken
-            };
-            
-            localStorage.setItem('sessionTokens', JSON.stringify(sessionTokens));
-            refreshAWSCredentials();
-            showLoggedInState();
-          },
-          onFailure: function(err) {
-            console.log('로그인 실패:', err);
-            alert('로그인에 실패했습니다: ' + err.message);
-          }
-        });
-      }
-
-      function logoutUser() {
-        localStorage.clear();
-        showLoggedOutState();
-        loadTodos(); // 로그아웃 후 다시 로드하여 버튼 상태 업데이트
-      }
-
-      function refreshAWSCredentials() {
-        var sessionTokensString = localStorage.getItem('sessionTokens');
-        if (!sessionTokensString) return;
-        
-        var sessionTokens = JSON.parse(sessionTokensString);
-        var config = {
-          region: awsRegion,
-          credentials: new AWS.CognitoIdentityCredentials({
-            IdentityPoolId: cognitoUserPoolId
-          })
-        };
-        
-        localStorage.setItem('awsConfig', JSON.stringify(config));
-      }
-
-      function loadTodos() {
-        $.ajax({
-          url: todosApiEndpoint + '/todos',
-          type: 'GET',
-          success: function(response) {
-            todos = response.todos || [];
-            renderTodos();
-          },
-          error: function(xhr, status, error) {
-            console.error('할일 목록 로드 실패:', error);
-            alert('할일 목록을 불러오는데 실패했습니다.');
-          }
-        });
-      }
-
-      function addTodo() {
-        const todoText = $('#todoInput').val().trim();
-        if (todoText === '') {
-          alert('할일을 입력해주세요.');
-          return;
-        }
-
-        $.ajax({
-          url: todosApiEndpoint + '/todos',
-          type: 'POST',
-          contentType: 'application/json',
-          data: JSON.stringify({ text: todoText }),
-          success: function(response) {
-            $('#todoInput').val('');
-            loadTodos(); // 새로고침
-          },
-          error: function(xhr, status, error) {
-            console.error('할일 추가 실패:', error);
-            alert('할일 추가에 실패했습니다.');
-          }
-        });
-      }
-
-      function toggleTodo(todoId) {
-        if (!isLoggedIn) {
-          alert('로그인이 필요한 기능입니다.');
-          return;
-        }
-
-        try {
-          var sessionTokensString = localStorage.getItem('sessionTokens');
-          var sessionTokens = JSON.parse(sessionTokensString);
-          var IdToken = sessionTokens.IdToken;
-          var idJwt = IdToken.jwtToken;
-
-          $.ajax({
-            url: todosApiEndpoint + '/todos/' + todoId + '/toggle',
-            type: 'POST',
-            headers: { 'Authorization': idJwt },
-            success: function(response) {
-              loadTodos(); // 새로고침
-            },
-            error: function(xhr, status, error) {
-              console.error('할일 상태 변경 실패:', error);
-              if (xhr.status == 401) {
-                refreshAWSCredentials();
-              }
-              alert('할일 상태 변경에 실패했습니다.');
-            }
-          });
-        } catch (err) {
-          alert('로그인이 필요한 기능입니다.');
-          console.log(err.message);
-        }
-      }
-
-      function deleteTodo(todoId) {
-        if (!isLoggedIn) {
-          alert('로그인이 필요한 기능입니다.');
-          return;
-        }
-
-        if (!confirm('정말로 이 할일을 삭제하시겠습니까?')) {
-          return;
-        }
-
-        try {
-          var sessionTokensString = localStorage.getItem('sessionTokens');
-          var sessionTokens = JSON.parse(sessionTokensString);
-          var IdToken = sessionTokens.IdToken;
-          var idJwt = IdToken.jwtToken;
-
-          $.ajax({
-            url: todosApiEndpoint + '/todos/' + todoId,
-            type: 'DELETE',
-            headers: { 'Authorization': idJwt },
-            success: function(response) {
-              loadTodos(); // 새로고침
-            },
-            error: function(xhr, status, error) {
-              console.error('할일 삭제 실패:', error);
-              if (xhr.status == 401) {
-                refreshAWSCredentials();
-              }
-              alert('할일 삭제에 실패했습니다.');
-            }
-          });
-        } catch (err) {
-          alert('로그인이 필요한 기능입니다.');
-          console.log(err.message);
-        }
-      }
-
-      function renderTodos() {
-        const todoList = $('#todoList');
-        todoList.empty();
-
-        if (todos.length === 0) {
-          todoList.html('<div class="todo-item"><span class="todo-text">할일이 없습니다. 새로운 할일을 추가해보세요!</span></div>');
-          return;
-        }
-
-        todos.forEach(todo => {
-          const todoItem = $(`
-            <div class="todo-item ${todo.completed ? 'completed' : ''}">
-              <input type="checkbox" ${todo.completed ? 'checked' : ''} 
-                     ${isLoggedIn ? '' : 'disabled'} 
-                     onchange="toggleTodo(${todo.id})">
-              <span class="todo-text ${todo.completed ? 'completed' : ''}">${todo.text}</span>
-              <button class="delete-btn" 
-                      ${isLoggedIn ? '' : 'disabled'} 
-                      onclick="deleteTodo(${todo.id})">삭제</button>
-            </div>
-          `);
-          todoList.append(todoItem);
-        });
-      }
+      var todosApiEndpoint = 'REPLACE_ME'; // 예시: 'https://abcd12345.execute-api.ap-northeast-2.amazonaws.com/prod'
+      var cognitoUserPoolId = 'REPLACE_ME';  // 예시: 'ap-northeast-2_abcd12345'
+      var cognitoUserPoolClientId = 'REPLACE_ME'; // 예시: 'abcd12345abcd12345abcd12345'
+      var awsRegion = 'REPLACE_ME'; // 예시: 'ap-northeast-2'
     </script>
+    <script src="app.js"></script>
   </body>
 </html>

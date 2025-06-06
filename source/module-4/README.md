@@ -375,24 +375,58 @@ https://REPLACE_ME_WITH_API_ID.execute-api.REPLACE_ME_WITH_REGION.amazonaws.com/
 
 새 버전의 TodoList 웹사이트는 `web/` 디렉토리에 위치해 있습니다. 
 
-웹사이트 파일들의 `index.html`, `register.html`, `confirm.html` 파일을 열고, 작은 따옴표 안의 **REPLACE_ME** 문자열을 위에서 복사한 값으로 바꾸고 파일을 저장합니다:
+#### API Gateway 엔드포인트 설정
+
+먼저 배포된 API Gateway의 엔드포인트 URL을 확인해야 합니다. 위의 CDK 배포 출력에서 **APIID**를 확인하거나, 다음 명령어로 API Gateway ID를 검색할 수 있습니다:
+
+```sh
+aws apigateway get-rest-apis --query 'items[?name==`TodoListApi`][id]' --output text
+```
+
+API Gateway 엔드포인트 URL 형식은 다음과 같습니다:
+
+```
+https://[API_GATEWAY_ID].execute-api.[REGION].amazonaws.com/prod
+```
+
+> **참고:** 
+> - `/prod`는 CDK 코드에서 `stageName: 'prod'`로 설정한 API 스테이지 이름입니다
+> - 이는 API Gateway의 배포 환경(개발/스테이징/프로덕션 등)을 구분하는데 사용됩니다
+
+예를 들어, API Gateway ID가 `9n4mdct5q3`이고 리전이 `ap-northeast-2`라면:
+```
+https://9n4mdct5q3.execute-api.ap-northeast-2.amazonaws.com/prod
+```
+
+#### 웹사이트 파일 설정
+
+웹사이트 파일들의 `index.html`, `register.html`, `confirm.html` 파일을 열고, JavaScript 설정 부분에서 다음 값들을 업데이트합니다:
+
+1. **`todosApiEndpoint`**: 위에서 확인한 API Gateway URL
+2. **`cognitoUserPoolId`**: 이전에 저장한 Cognito User Pool ID
+3. **`cognitoUserPoolClientId`**: 이전에 저장한 Cognito User Pool Client ID
+4. **`awsRegion`**: 현재 AWS 리전
+
+```javascript
+// web/index.html, register.html, confirm.html 파일에서 설정
+var todosApiEndpoint = 'https://9n4mdct5q3.execute-api.ap-northeast-2.amazonaws.com/prod';
+var cognitoUserPoolId = 'ap-northeast-2_ZBFhksfKE';
+var cognitoUserPoolClientId = '7df8hhrisaqu56im1ug8iddm3o';
+var awsRegion = 'ap-northeast-2';
+```
+
+> **중요:** 
+> - **NLB URL을 사용하지 마세요** (예: `http://todoli-servi-xxx.elb.amazonaws.com`)
+> - **반드시 API Gateway URL을 사용해야 합니다** (CORS 및 인증 처리를 위해)
+
+#### 웹사이트 파일 복사 및 배포
 
 ```sh
 cd ../
 cp -r source/module-4/web/* ./web
 ```
 
-> **참고:** Cognito UserPool ID와 Cognito UserPool Client ID는 이전에 저장한 값입니다 (예: `ap-northeast-2_ab12345YZ`와 `6p3bs000no6a4ue1idruvd05ad`). API Gateway 엔드포인트와 AWS 리전의 값을 검색하려면 다음 명령을 사용할 수 있습니다:
-
-```sh
-aws apigateway get-rest-apis --query 'items[?name==`TodoListApi`][id]' --output text
-```
-
-```sh
-aws configure get region
-```
-
-이제 S3 호스팅 웹사이트를 업데이트합니다:
+위에서 설명한 대로 웹 파일들을 수정한 후, S3 호스팅 웹사이트를 업데이트합니다:
 
 ```sh
 cd cdk/
@@ -417,6 +451,31 @@ cdk deploy TodoList-Website
 - API Gateway를 통한 REST API 엔드포인트 관리
 - 인증이 필요한 기능 (할일 완료/삭제)에 대한 접근 제어
 - 반응형 웹 UI
+
+### CORS 문제 해결 (선택사항)
+
+만약 웹 브라우저에서 할일 완료 토글이나 삭제 기능 사용 시 CORS 에러가 발생한다면, API Gateway에서 CORS 설정을 재적용해야 합니다.
+
+**방법 1: AWS 콘솔에서 해결**
+1. AWS 콘솔 → API Gateway → TodoListApi 선택
+2. Actions → Enable CORS 클릭
+3. 다음 설정으로 CORS 활성화:
+   - Access-Control-Allow-Origin: `*`
+   - Access-Control-Allow-Headers: `Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token`
+   - Access-Control-Allow-Methods: `GET,POST,DELETE,OPTIONS`
+4. "Enable CORS and replace existing CORS headers" 클릭
+5. Actions → Deploy API → prod 스테이지에 배포
+
+**방법 2: CDK 재배포로 해결**
+
+CDK를 통해 API Gateway 스택을 재배포하여 CORS 설정을 확실히 적용:
+
+```sh
+cd cdk/
+cdk deploy TodoList-APIGateway --require-approval never
+```
+
+재배포 후 브라우저에서 페이지를 새로고침하고 다시 테스트해보세요.
 
 이것으로 모듈 4를 마치겠습니다.
 
