@@ -13,7 +13,7 @@
 - [Node.js 20.x](https://nodejs.org/ko)
 - [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 - [AWS CDK](https://docs.aws.amazon.com/ko_kr/cdk/v2/guide/getting-started.html)
-- [Docker & Docker Desktop](https://www.docker.com/)
+- [Docker Desktop](https://www.docker.com/)
 
 ```bash
 # AWS CLI 버전 확인
