@@ -61,4 +61,4 @@ cdk --version
 - [AWS sample](https://github.com/aws-samples/aws-modern-application-workshop)
 
 
-[모듈 0 진행](/source/module-0/)
+[모듈 0 진행](source/module-0/README.md)
