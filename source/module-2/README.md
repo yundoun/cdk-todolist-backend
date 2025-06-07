@@ -18,7 +18,6 @@
 * [Amazon Elastic Container Service (ECS)](https://aws.amazon.com/ecs/)
 * [AWS Fargate](https://aws.amazon.com/fargate/)
 * [AWS Elastic Container Registry (ECR)](https://aws.amazon.com/ecr/)
-* [AWS CodeCommit](https://aws.amazon.com/codecommit/)
 * [AWS CodePipeline](https://aws.amazon.com/codepipeline/)
 * [AWS CodeDeploy](https://aws.amazon.com/codedeploy/)
 * [AWS CodeBuild](https://aws.amazon.com/codebuild/)
@@ -128,7 +127,7 @@ this.vpc = new ec2.Vpc(this, "VPC", {
 이제 다음 명령을 사용하여 VPC를 배포합니다:
 
 ```sh
-cdk deploy TodoList-Network
+cdk deploy TodoList-Network --require-approval never
 ```
 
 ## Module 2a: AWS Fargate로 서비스 배포
@@ -156,12 +155,6 @@ cp -R ../source/module-2/app/* .
 
 준비되어있는 Dockerfile로 Docker 이미지를 생성합니다:
 먼저 설치한 docker desktop을 실행해주세요
-
-* `app`으로 이동합니다.
-
-```
-cd app
-```
 
 ```sh
 docker buildx build --platform linux/amd64 \
@@ -263,7 +256,7 @@ export class EcrStack extends cdk.Stack {
 이제 다음 명령어로 ECR 스택을 배포합니다:
 
 ```sh
-cdk deploy TodoList-ECR
+cdk deploy TodoList-ECR --require-approval never
 ```
 
 브라우저에서 ECR 대시보드로 이동하여 방금 생성한 ECR 리포지토리가 목록에있는지 확인합니다.
@@ -492,7 +485,7 @@ aws iam create-service-linked-role --aws-service-name ecs.amazonaws.com
 이제 ECS 스택을 배포합니다:
 
 ```sh
-cdk deploy TodoList-ECS
+cdk deploy TodoList-ECS --require-approval never
 ```
 
 `Do you wish to deploy these changes (y/n)?`와 같은 메시지가 표시되면 `y`를 입력합니다.
@@ -536,15 +529,15 @@ API 호출에 동일한 NLB URL을 사용하기 위해 `web/index.html` 파일�
 S3에서 호스팅되는 웹사이트를 업데이트하기 위해 `TodoList-Website` 스택을 배포합니다:
 
 ```sh
-cdk deploy TodoList-Website
+cdk deploy TodoList-Website --require-approval never
 ```
 
 업데이트된 투두리스트 웹사이트를 확인하기 위해 모듈 1 마지막에 출력하게끔 한 CloudFront URL을 사용하여 웹사이트에 접속합니다 (**HTTP로 접속하여야 합니다**). AWS Fargate에 배포된 도커 컨테이너에서 동작하는 Flask API로부터 JSON 데이터를 받습니다.
 
 
-## 모듈 2b: AWS Code 서비스를 사용한 배포 자동화
+## 모듈 2b: AWS CodePipeline 서비스를 사용한 배포 자동화
 
-![Architecture](/images/module-2/architecture-module-2b.png)
+![Architecture](../images/module-2/architecture-module-2b.png)
 
 이제 서비스가 시작되어 동작중입니다. 서비스를 운영하며 Flask 서비스의 코드를 변경해야하는 일은 자주 발생하는 작업입니다. 서비스에 새로운 기능을 배포할 때마다 앞선 모든 과정을 반복하는건 개발 속도를 느리게 만드는 병목이 될 수 있습니다. 이를 해결하기 위해 지속적 통합 및 지속적 전달, 또는 CI/CD라 불리우는 기술이 등장합니다!
 
@@ -571,12 +564,12 @@ CodePipeline이 GitHub에 접근할 수 있도록 Personal Access Token을 생�
 3. **Note**: `AWS CodePipeline Token` 입력
 4. **Expiration**: 적절한 기간 선택 (예: 90 days)
 5. **권한 선택** (다음 권한들이 필요합니다):
-   - ✅ **repo** (전체 선택)
+   - ✅ **repo** 
      - repo:status
      - repo_deployment
      - public_repo
      - repo:invite
-   - ✅ **admin:repo_hook**
+   - ✅ **admin:repo_hook** (전체 선택)
      - write:repo_hook
      - read:repo_hook
 6. **Generate token** 클릭
@@ -751,7 +744,7 @@ new CiCdStack(app, "TodoList-CICD", {
 CICD 스택을 배포합니다:
 
 ```sh
-cdk deploy TodoList-CICD
+cdk deploy TodoList-CICD --require-approval never
 ```
 
 ### CI/CD 파이프라인 테스트
@@ -763,7 +756,7 @@ cdk deploy TodoList-CICD
 1. **백엔드 코드 수정**: GitHub 리포지토리에서 또는 로컬에서 `service/todo-list.json` 파일을 수정합니다
 2. **변경사항 푸시**: 
    ```sh
-   cd app
+   cd ../app
    git add .
    git commit -m "Update todo item for pipeline test"
    git push
