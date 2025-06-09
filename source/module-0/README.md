@@ -5,6 +5,7 @@
 AdministratorAccess 권한을 가진 계정을 생성하고 진행해주세요.
 
 ### aws iam 계정 생성
+(https://aws.amazon.com/ko/iam/)
 
 1. 액세스 관리 -> 사용자 -> 사용자 생성을 누릅니다.
 2. 사용자 이름은 cdk로 생성하며 선택사항은 누르지 않고 다음버튼을 누릅니다.
@@ -19,12 +20,11 @@ AdministratorAccess 권한을 가진 계정을 생성하고 진행해주세요.
 
 ```sh
 aws configure
+```
 AWS Access Key ID [None]: 액세스키
 AWS Secret Access Key [None]: 비밀액세스키
 Default region name [None]: ap-northeast-2
 Default output format [None]: json
-```
-
 
 이것으로 모듈 0을 마치겠습니다.
 

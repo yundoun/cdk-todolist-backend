@@ -43,7 +43,7 @@ AWS CDK의 가장 큰 이점 중 하나는 재사용성의 원칙입니다. 애�
 
 > 아래 모든 이동 커맨드는 cli가 연결될 수 있도록 작성되어 있습니다. 순서 외 폴더이동을 하였다면 다시 초기화 해주세요.
 
-`workshop` 폴더에서 AWS CDK 애플리케이션을 포함할 새로운 폴더를 생성합니다:
+AWS CDK 애플리케이션을 포함할 새로운 폴더를 생성합니다:
 
 ```sh
 mkdir cdk && cd cdk
@@ -67,6 +67,11 @@ cdk init app --language typescript
 * `lib` 폴더는 워크샵에 필요한 인프라 구성요소를 정의할 곳입니다.
 
 > **참고:** 직접 스택 파일들을 생성할 것이므로 `cdk/lib/cdk-stack.ts` 파일과 `cdk/test/cdk.test.ts` 파일을 삭제해주세요.
+
+```sh
+rm -rf lib/cdk-stack.ts
+rm -rf test/
+```
 
 ## TodoList 웹사이트 생성
 
@@ -106,7 +111,7 @@ new WebApplicationStack(app, "TodoList-Website");
 
 ### 웹 애플리케이션 코드 복사
 
-`workshop` 루트 디렉토리에서 웹 애플리케이션 코드를 저장할 새로운 디렉토리를 생성합니다:
+루트 디렉토리에서 웹 애플리케이션 코드를 저장할 새로운 디렉토리를 생성합니다:
 
 ```sh
 cd ../
@@ -134,6 +139,7 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
+import * as origins from 'aws-cdk-lib/aws-cloudfront-origins'
 ```
 
 이제 `web-application-stack.ts` 생성자에서 다음 코드를 작성합니다:
@@ -277,7 +283,7 @@ cdk deploy TodoList-Website
 * 로컬 정적 콘텐츠를 버킷에 복사
 * 사이트에 접근할 수 있는 URL을 출력
 
-> **참고:** CloudFront 구성에 시간이 걸리니, 모듈 2로 넘어가 진행하고, 스택 배포가 완료된 뒤 다시 돌아와 아래 단계를 진행하시기 바랍니다. [모듈 2 진행](/module-2)
+> **참고:** CloudFront 구성에 시간이 걸리니, 모듈 2로 넘어가 진행하고, 스택 배포가 완료된 뒤 다시 돌아와 아래 단계를 진행하시기 바랍니다. [모듈 2 진행](../module-2/README.md)
 
 표시된 URL로 이동하여 웹사이트를 확인합니다.
 
