@@ -18,7 +18,7 @@
 
 ### 애플리케이션 아키텍처
 
-![Application Architecture](/images/arch-diagram.png)
+![Application Architecture](../images/arch-diagram.png)
 
 TodoList 웹사이트는 Amazon CloudFront와 함께 Amazon S3에서 정적 콘텐츠를 제공, Amazon ECS에서 AWS Fargate를 통해 컨테이너로 배포된 마이크로서비스 API 백엔드를 제공, Amazon DynamoDB가 제공하는 관리형 NoSQL 데이터베이스에 데이터를 저장, Amazon Cognito와 통합한 AWS API Gateway를 통해 애플리케이션에서 인증 및 권한 부여 기능을 제공합니다. 사용자 웹사이트 클릭은 Amazon Kinesis Firehose 전송 스트림에 레코드로서 보내어지며, 서버리스 AWS Lambda 함수에 의해 처리되어 Amazon S3에 저장됩니다.
 
