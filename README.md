@@ -51,9 +51,4 @@ cdk --version
 - 일부 AWS 서비스는 비용이 발생할 수 있습니다
 - 실습 완료 후 생성된 리소스는 반드시 삭제해야 합니다
 
-## 원본 출처
-
-- [AWS sample](https://github.com/aws-samples/aws-modern-application-workshop)
-
-
-[모듈 0 진행](source/module-0/README.md)
+[모듈 0 진행](source/README.md)

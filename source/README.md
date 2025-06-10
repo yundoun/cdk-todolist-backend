@@ -28,7 +28,7 @@ TodoList 웹사이트는 Amazon CloudFront와 함께 Amazon S3에서 정적 콘�
 
 아래 모듈 0 진행을 눌러 실습을 진행해주세요!
 
-### [모듈 0 진행](/module-0)
+### [모듈 0 진행](./module-0/README.md)
 
 
 ### 워크샵 정리 (완료 후)
@@ -65,5 +65,9 @@ TodoList 워크샵에서 생성 및 사용한 모든 리소스의 제거를 아�
 
 [모듈 0 진행](./module-0/README.md)
 
+
+## 원본 출처
+
+- [AWS sample](https://github.com/aws-samples/aws-modern-application-workshop)
 
 ## [AWS Developer Center](https://developer.aws)
