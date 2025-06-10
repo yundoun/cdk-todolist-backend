@@ -9,7 +9,6 @@
 해당 프로젝트는 다음 환경들이 설치되어 있어야 합니다.
 꼭 버전이 맞아야 하는건 아니지만 aws-cli는 꼭 2버전입니다.
 
-- [Python 3.13](https://www.python.org/downloads/)
 - [Node.js 20.x](https://nodejs.org/ko)
 - [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 - [AWS CDK](https://docs.aws.amazon.com/ko_kr/cdk/v2/guide/getting-started.html)
@@ -27,10 +26,6 @@ node -v
 # npm 버전 확인
 npm -v
 # 출력: 10.9.0
-
-# Python 버전 확인
-python --version
-# 출력: Python 3.13.0
 
 # AWS CDK 버전 확인
 cdk --version
