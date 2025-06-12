@@ -71,3 +71,5 @@ TodoList 워크샵에서 생성 및 사용한 모든 리소스의 제거를 아�
 - [AWS sample](https://github.com/aws-samples/aws-modern-application-workshop)
 
 ## [AWS Developer Center](https://developer.aws)
+
+## [AWS CDK] (https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib-readme.html)

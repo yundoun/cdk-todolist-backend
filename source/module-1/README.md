@@ -43,7 +43,8 @@ AWS CDK의 가장 큰 이점 중 하나는 재사용성의 원칙입니다. 애�
 
 > 아래 모든 이동 커맨드는 cli가 연결될 수 있도록 작성되어 있습니다. 순서 외 폴더이동을 하였다면 다시 초기화 해주세요.
 
-AWS CDK 애플리케이션을 포함할 새로운 폴더를 생성합니다:
+AWS CDK 애플리케이션을 포함할 새로운 폴더를 생성합니다.
+새 터미널을 열억서 다음 명령어를 실행합니다.
 
 ```sh
 mkdir cdk && cd cdk
@@ -76,6 +77,13 @@ rm -rf test/
 ## TodoList 웹사이트 생성
 
 이제 웹사이트 호스팅에 필요한 인프라를 정의해봅니다. 
+
+```sh
+cp lib/web-application-stack.ts ../source/module-1/cdk/lib/web-application-stack.ts
+```
+
+
+
 
 `lib` 폴더 안에 `web-application-stack.ts` 이름의 새 파일을 생성한 후, 그리고 다음 코드를 복사하거나 똑같이 작성하여 스켈레톤 클래스 구조를 정의합니다:
 

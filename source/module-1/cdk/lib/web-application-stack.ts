@@ -10,8 +10,8 @@ import * as origins from 'aws-cdk-lib/aws-cloudfront-origins'
 export class WebApplicationStack extends cdk.Stack {
   constructor(app: cdk.App, id: string) {
     super(app, id);
-    const webAppRoot = path.resolve(__dirname, '..', '..', 'web');
 
+    const webAppRoot = path.resolve(__dirname, '..', '..', 'web');
 
     const bucket = new s3.Bucket(this, "Bucket", {
       websiteIndexDocument: "index.html"
@@ -45,7 +45,6 @@ export class WebApplicationStack extends cdk.Stack {
       },
       defaultRootObject: 'index.html'
     });
-
 
     new s3deploy.BucketDeployment(this, "DeployWebsite", {
       sources: [
