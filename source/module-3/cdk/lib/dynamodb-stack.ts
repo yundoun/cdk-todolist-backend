@@ -1,4 +1,3 @@
-
 import * as cdk from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -12,7 +11,6 @@ interface DynamoDbStackProps extends cdk.StackProps {
 
 export class DynamoDbStack extends cdk.Stack {
   public readonly table: dynamodb.Table;
-
 
   constructor(scope: cdk.App, id: string, props: DynamoDbStackProps) {
     super(scope, id);
@@ -53,5 +51,6 @@ export class DynamoDbStack extends cdk.Stack {
     props.fargateService.taskDefinition.addToTaskRolePolicy(
       fargatePolicy
     );
+
   }
 }

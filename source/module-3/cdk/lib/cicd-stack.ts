@@ -45,7 +45,7 @@ export class CiCdStack extends cdk.Stack {
     const sourceAction = new actions.GitHubSourceAction({
       actionName: "GitHub-Source",
       owner: 'dev-coo',           // ← 실제 GitHub 사용자명으로 변경
-      repo: 'todolist-backend',
+      repo: 'cdk-todolist-backend',
       branch: 'main',
       oauthToken: githubToken,
       output: sourceOutput

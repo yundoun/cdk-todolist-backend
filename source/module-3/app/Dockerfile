@@ -14,4 +14,4 @@ RUN /env/bin/pip install flask==2.0.1 werkzeug==2.0.1
 RUN /env/bin/pip install -r requirements.txt
 
 ENTRYPOINT ["/env/bin/python3"]
-CMD ["todoService.py"]
+CMD ["todo_service.py"]

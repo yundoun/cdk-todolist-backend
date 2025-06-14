@@ -25,6 +25,8 @@ DynamoDB 테이블을 아키텍처에 추가하기 위해 AWS CDK를 사용하�
 
 `lib` 폴더에 `dynamodb-stack.ts`이라는 파일을 생성합니다:
 
+새로운 터미널을 열어서 다음 명령어를 실행합니다.
+
 ```sh
 cd cdk
 touch lib/dynamodb-stack.ts
@@ -160,7 +162,7 @@ props.fargateService.taskDefinition.addToTaskRolePolicy(
 완료 후 DynamoDB 테이블을 배포합니다:
 
 ```sh
-cdk deploy TodoList-ECS TodoList-DynamoDB
+cdk deploy TodoList-ECS TodoList-DynamoDB --require-approval never
 ```
 
 `Do you wish to deploy these changes (y/n)?`와 같은 메시지가 표시되면 `y`를 입력합니다.
@@ -191,6 +193,7 @@ aws dynamodb scan --table-name TodoTable
 DynamoDB API **BatchWriteItem**을 사용하여 제공된 JSON 파일로 테이블에 투두 아이템을 일괄 삽입할 수 있습니다. 이를 위해 터미널에서 다음 명령을 실행합니다 (처리되지 않은 항목이 없다는 응답이 나와야합니다):
 
 ```sh
+cd ../
 aws dynamodb batch-write-item --request-items "$(cat ./source/module-3/data/populate-dynamodb.json)"
 ```
 
