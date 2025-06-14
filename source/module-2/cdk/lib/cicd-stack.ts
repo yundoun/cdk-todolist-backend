@@ -1,11 +1,9 @@
 import * as cdk from 'aws-cdk-lib';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
-import * as codecommit from 'aws-cdk-lib/aws-codecommit';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as codepipeline from 'aws-cdk-lib/aws-codepipeline';
 import * as actions from 'aws-cdk-lib/aws-codepipeline-actions';
-import * as iam from 'aws-cdk-lib/aws-iam';
 
 interface CiCdStackProps extends cdk.StackProps {
   ecrRepository: ecr.Repository;
@@ -15,13 +13,13 @@ interface CiCdStackProps extends cdk.StackProps {
 export class CiCdStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props: CiCdStackProps) {
     super(scope, id);
-    
-    const backendRepository = new codecommit.Repository(this, "BackendRepository", {
-      repositoryName: "MythicalMysfits-BackendRepository"
-    });
-    
+
+    // GitHub Personal Access Token 가져오기
+    const githubToken = cdk.SecretValue.secretsManager('github-token');
+
+    // CodeBuild 프로젝트 생성
     const codebuildProject = new codebuild.PipelineProject(this, "BuildProject", {
-      projectName: "MythicalMysfitsServiceCodeBuildProject",
+      projectName: "TodoListServiceCodeBuildProject",
       environment: {
         computeType: codebuild.ComputeType.SMALL,
         buildImage: codebuild.LinuxBuildImage.STANDARD_6_0,
@@ -38,71 +36,56 @@ export class CiCdStack extends cdk.Stack {
         }
       }
     });
-    
-    const codeBuildPolicy = new iam.PolicyStatement();
-    codeBuildPolicy.addResources(backendRepository.repositoryArn)
-    codeBuildPolicy.addActions(
-        "codecommit:ListBranches",
-        "codecommit:ListRepositories",
-        "codecommit:BatchGetRepositories",
-        "codecommit:GitPull"
-      )
-    codebuildProject.addToRolePolicy(
-      codeBuildPolicy
-    );
-    
+
+    // ECR 리포지토리에 대한 권한 부여
     props.ecrRepository.grantPullPush(codebuildProject.grantPrincipal);
 
+    // 소스 액션 정의 (GitHub)
     const sourceOutput = new codepipeline.Artifact();
-    const sourceAction = new actions.CodeCommitSourceAction({
-      actionName: "CodeCommit-Source",
-      branch: "master",
-      trigger: actions.CodeCommitTrigger.EVENTS,
-      repository: backendRepository,
+    const sourceAction = new actions.GitHubSourceAction({
+      actionName: "GitHub-Source",
+      owner: 'YOUR_GITHUB_USERNAME',           // ← 실제 GitHub 사용자명으로 변경
+      repo: 'cdk-todolist-backend',
+      branch: 'main',
+      oauthToken: githubToken,
       output: sourceOutput
     });
-    
+
+    // 빌드 액션 정의
     const buildOutput = new codepipeline.Artifact();
     const buildAction = new actions.CodeBuildAction({
       actionName: "Build",
       input: sourceOutput,
-      outputs: [
-        buildOutput
-      ],
+      outputs: [buildOutput],
       project: codebuildProject
     });
-    
+
+    // 배포 액션 정의
     const deployAction = new actions.EcsDeployAction({
       actionName: "DeployAction",
       service: props.ecsService,
-      input: buildOutput,
-      deploymentTimeout: cdk.Duration.minutes(15)
+      input: buildOutput
     });
-    
+
+    // 파이프라인 생성
     const pipeline = new codepipeline.Pipeline(this, "Pipeline", {
-      pipelineName: "MythicalMysfitsPipeline"
+      pipelineName: "TodoListPipeline"
     });
+
+    // 파이프라인 스테이지 추가
     pipeline.addStage({
       stageName: "Source",
       actions: [sourceAction]
     });
+
     pipeline.addStage({
       stageName: "Build",
       actions: [buildAction]
     });
+
     pipeline.addStage({
       stageName: "Deploy",
       actions: [deployAction]
-    });
-    
-    new cdk.CfnOutput(this, 'BackendRepositoryCloneUrlHttp', {
-      description: 'Backend Repository CloneUrl HTTP',
-      value: backendRepository.repositoryCloneUrlHttp
-    });
-
-    new cdk.CfnOutput(this, 'BackendRepositoryCloneUrlSsh', {
-      description: 'Backend Repository CloneUrl SSH',
-      value: backendRepository.repositoryCloneUrlSsh
     });
   }
 }

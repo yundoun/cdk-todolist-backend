@@ -22,11 +22,14 @@ AdministratorAccess 권한을 가진 계정을 생성하고 진행해주세요.
 
 ```sh
 aws configure
+
+# AWS Access Key ID [None]: 액세스키
+# AWS Secret Access Key [None]: 비밀액세스키
+# Default region name [None]: ap-northeast-2
+# Default output format [None]: json
+
 ```
-AWS Access Key ID [None]: 액세스키
-AWS Secret Access Key [None]: 비밀액세스키
-Default region name [None]: ap-northeast-2
-Default output format [None]: json
+
 
 이것으로 모듈 0을 마치겠습니다.
 

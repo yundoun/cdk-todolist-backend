@@ -24,7 +24,7 @@
 
 ### 개요
 
-모듈 2에서는 [AWS CDK](https://aws.amazon.com/cdk/)를 사용하여 [Amazon Elastic Container Service](https://aws.amazon.com/ecs/)의 [AWS Fargate](https://aws.amazon.com/fargate/)로 호스팅 되는 마이크로서비스를 생성하여 신비한 미스핏츠 웹사이트의 애플리케이션 백엔드를 구성합니다. AWS Fargate는 Amazon ECS의 배포 옵션으로서 클러스터 또는 서버 관리 없이 컨테이너를 배포할 수 있습니다. Python을 사용하여 Network Load Balancer 뒤에서 동작하는 Flask 앱의 도커 컨테이너를 생성하여 신비한 미스핏츠 백엔드를 구성합니다. 이를 통해 프론트엔드 웹사이트와 통합되는 마이크로서비스 백엔드를 형성할 것 입니다.
+모듈 2에서는 [AWS CDK](https://aws.amazon.com/cdk/)를 사용하여 [Amazon Elastic Container Service](https://aws.amazon.com/ecs/)의 [AWS Fargate](https://aws.amazon.com/fargate/)로 호스팅 되는 마이크로서비스를 생성하여 투두리스트 웹사이트의 애플리케이션 백엔드를 구성합니다. AWS Fargate는 Amazon ECS의 배포 옵션으로서 클러스터 또는 서버 관리 없이 컨테이너를 배포할 수 있습니다. Python을 사용하여 Network Load Balancer 뒤에서 동작하는 Flask 앱의 도커 컨테이너를 생성하여 투두리스트 백엔드를 구성합니다. 이를 통해 프론트엔드 웹사이트와 통합되는 마이크로서비스 백엔드를 형성할 것 입니다.
 
 ### AWS CDK를 사용하여 핵심 인프라 생성
 
@@ -81,7 +81,6 @@ const networkStack = new NetworkStack(app, "TodoList-Network");
 import * as cdk from 'aws-cdk-lib';
 
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
-import * as iam from 'aws-cdk-lib/aws-iam';
 
 export class NetworkStack extends cdk.Stack {
   public readonly vpc: ec2.Vpc;
@@ -95,21 +94,6 @@ export class NetworkStack extends cdk.Stack {
 ```
 
 > **참고:** `ec2.Vpc`의 인스턴스를 다른 스택이 참조할 수 있도록 읽기 전용 속성을 할당합니다.
-
-이 코드가 VPC를 정의하는데 필요한 전부입니다! `cdk synth` 명령을 실행하여 이 한 줄을 통해 생성되는 것을 확인해보겠습니다. 터미널 윈도우에서 다음 명령을 실행합니다:
-
-```sh
-cdk synth -o templates
-```
-
-이 명령은 NetworkStack의 AWS CloudFormation 템플릿을 생성하여 templates 이라는 폴더에 저장합니다. 생성된 파일을 열고 내용을 확인합니다.
-
-단 한줄의 코드가 다음을 포함하는 엄청난 양의 AWS CloudFormation을 생성한 것을 확인할 수 있습니다:
-
-* A VPC 컨스트럭츠
-* 리전의 각 가용 영역의 퍼블릭, 프라이빗, 격리된 서브넷
-* 각 서브넷의 라우팅 테이블
-* 각 가용 영역의 NAT와 인터넷 게이트웨이
 
 일부 속성을 재정의하여 생성중인 VPC를 사용자 정의 해보겠습니다. VPC 정의를 다음과 같이 변경합니다:
 
@@ -142,8 +126,9 @@ cdk deploy TodoList-Network --require-approval never
 
 도커가 로컬 환경에 설치되어 있다면, 도커 이미지를 로컬에서 빌드하기 위해 터미널에 다음 명령을 실행하면 됩니다:
 
+새 터미널을 열어서 다음 명령을 실행합니다:
+
 ```sh
-cd ../
 mkdir app && cd app
 ```
 
@@ -283,7 +268,7 @@ aws ecr describe-images --repository-name todolist/service
 
 ### AWS Fargate와 Amazon ECS Service 생성
 
-이제 ECR에 이미지가 저장되었으며, AWS Fargate를 사용하여 Amazon ECS에서 호스팅되는 서비스에 배포할 수 있습니다. 이전 모듈의 일부로 Cloud9의 터미널을 통해 로컬에서 테스트한 동일한 서비스가 클라우드로 배포되고 Network Load Balancer를 통해 퍼블릭하게 접근할 수 있도록 해보겠습니다.
+이제 ECR에 이미지가 저장되었으며, AWS Fargate를 사용하여 Amazon ECS에서 호스팅되는 서비스에 배포할 수 있습니다. 이전 모듈의 일부로 로컬에서 테스트한 동일한 서비스가 클라우드로 배포되고 Network Load Balancer를 통해 퍼블릭하게 접근할 수 있도록 해보겠습니다.
 
 먼저 **Amazon Elastic Container Service (ECS)**에서 **Cluster**를 생성할 것 입니다. **Cluster**는 서비스 컨테이너가 배포될 "서버" 클러스터를 나타냅니다. 서버가 "인용문" 내에 있는 이유는 **AWS Fargate**를 사용하기 때문입니다. Fargate를 사용하면 서버를 실제로 프로비저닝하거나 관리할 필요 없이 컨테이너를 클러스터에 배포할 수 있습니다.
 
@@ -551,11 +536,27 @@ GitHub에서 새로운 리포지토리를 생성합니다:
 
 1. [GitHub](https://github.com)에 로그인합니다
 2. **New repository** 버튼을 클릭합니다
-3. **Repository name**: `todolist-backend`
+3. **Repository name**: `cdk-todolist-backend`
 4. **Public** 또는 **Private** 선택 (둘 다 가능)
 5. **Create repository** 클릭
 
-#### 2. GitHub Personal Access Token 생성
+#### 2. 백엔드 코드를 GitHub에 푸시
+
+현재 app 폴더의 코드를 GitHub 리포지토리에 푸시합니다:
+
+```sh
+cd ../app
+git init
+git add .
+git commit -m "Initial commit: TodoList backend service"
+git branch -M main
+git remote add origin https://github.com/YOUR_GITHUB_USERNAME/cdk-todolist-backend.git
+git push -u origin main
+```
+
+`YOUR_GITHUB_USERNAME`을 실제 GitHub 사용자명으로 교체하세요.
+
+#### 3. GitHub Personal Access Token 생성
 
 CodePipeline이 GitHub에 접근할 수 있도록 Personal Access Token을 생성합니다:
 
@@ -575,7 +576,7 @@ CodePipeline이 GitHub에 접근할 수 있도록 Personal Access Token을 생�
 6. **Generate token** 클릭
 7. **생성된 토큰을 복사하여 안전한 곳에 저장** (다시 볼 수 없습니다!)
 
-#### 3. AWS Secrets Manager에 토큰 저장
+#### 4. AWS Secrets Manager에 토큰 저장
 
 생성한 GitHub 토큰을 AWS Secrets Manager에 저장합니다:
 
@@ -586,23 +587,15 @@ aws secretsmanager create-secret \
   --secret-string "YOUR_GITHUB_TOKEN_HERE"
 ```
 
-`YOUR_GITHUB_TOKEN_HERE`를 실제 토큰 값으로 교체하세요.
-
-#### 4. 백엔드 코드를 GitHub에 푸시
-
-현재 app 폴더의 코드를 GitHub 리포지토리에 푸시합니다:
+만약 이미 토큰이 존재한다면 다음 명령어를 실행하여 업데이트 합니다:
 
 ```sh
-cd ../app
-git init
-git add .
-git commit -m "Initial commit: TodoList backend service"
-git branch -M main
-git remote add origin https://github.com/YOUR_GITHUB_USERNAME/todolist-backend.git
-git push -u origin main
+aws secretsmanager update-secret \
+  --secret-id github-token \
+  --secret-string "YOUR_GITHUB_TOKEN_HERE"
 ```
 
-`YOUR_GITHUB_USERNAME`을 실제 GitHub 사용자명으로 교체하세요.
+`YOUR_GITHUB_TOKEN_HERE`를 실제 토큰 값으로 교체하세요.
 
 ### 백엔드 서비스를 위한 CI/CD 스택 생성
 
@@ -755,6 +748,8 @@ cdk deploy TodoList-CICD --require-approval never
 
 1. **백엔드 코드 수정**: GitHub 리포지토리에서 또는 로컬에서 `service/todo-list.json` 파일을 수정합니다
 2. **변경사항 푸시**: 
+  app폴더를 루트로 잡고 새로운 터미널을 열어서 다음 명령어를 실행합니다.
+
    ```sh
    cd ../app
    git add .

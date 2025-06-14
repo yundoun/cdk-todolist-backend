@@ -7,7 +7,7 @@ export class EcrStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string) {
     super(scope, id);
     this.ecrRepository = new ecr.Repository(this, "Repository", {
-      repositoryName: "mythicalmysfits/service"
+      repositoryName: "todolist/service"
     });
   }
 }

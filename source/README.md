@@ -1,6 +1,6 @@
 # AWS에서 현대 애플리케이션 구축 (CDK)
 
-### **Python** 버전의 현대 애플리케이션 구축 워크샵에 오신걸 환영합니다!
+## **Python** 버전의 현대 애플리케이션 구축 워크샵에 오신걸 환영합니다!
 
 **AWS 경험: 초급**
 
@@ -8,17 +8,15 @@
 
 **비용: 사용되는 대부분의 서비스는 AWS 프리티어에 포함됩니다. 포함되지 않는 서비스들에 대해서 하루 $1 이하의 요금이 청구될 수 있습니다.**
 
-**준비사항:**
-
-* **AWS 계정과 관리자(Administrator) 수준의 접근 권한**
-
 워크샵이 끝난 뒤 워크샵에서 생성된 모든 리소스들은 반드시 종료하셔야 추가 과금이 발생하지 않습니다.
 
 **참고:** 비용 예상치는 워크샵을 통해 구축되는 데모 웹사이트에서 트래픽이 거의 또는 전혀 발생하지 않음을 가정합니다.
 
+추가로 코드 작성할 필요없이 대부분의 모든 내용은 복사 붙여넣기로만 진행이 되므로 코드 작성에 대해 부담을 느끼실 필요없이 진행하시면 됩니다. 그리고 추후 복습을 하실때 똑같이 진행할 수 있도록 작성되었으니 이점 참고해주시기 바랍니다.
+
 ### 애플리케이션 아키텍처
 
-![Application Architecture](../images/arch-diagram.png)
+![Application Architecture](./images/arch-diagram.png)
 
 TodoList 웹사이트는 Amazon CloudFront와 함께 Amazon S3에서 정적 콘텐츠를 제공, Amazon ECS에서 AWS Fargate를 통해 컨테이너로 배포된 마이크로서비스 API 백엔드를 제공, Amazon DynamoDB가 제공하는 관리형 NoSQL 데이터베이스에 데이터를 저장, Amazon Cognito와 통합한 AWS API Gateway를 통해 애플리케이션에서 인증 및 권한 부여 기능을 제공합니다. 사용자 웹사이트 클릭은 Amazon Kinesis Firehose 전송 스트림에 레코드로서 보내어지며, 서버리스 AWS Lambda 함수에 의해 처리되어 Amazon S3에 저장됩니다.
 
